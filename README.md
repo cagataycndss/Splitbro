@@ -5,9 +5,7 @@
 
 ## Proje Tanımı
 
-Splitbro, günlük hayatta sıkça yaşanan “hesabı kim ödedi, kim ne aldı, bana ne düştü?” karmaşasını ortadan kaldırmak için geliştirilmiştir. Kullanıcılar uygulama üzerinden fişin fotoğrafını çeker, yapay zekâ destekli sistem fişteki ürünleri otomatik olarak tanır. Ardından kullanıcılar hangi ürünü kimin aldığını işaretler ve uygulama tüm hesaplamaları otomatik olarak yapar.
-
-Web ve mobil platformlarda çalışacak şekilde tasarlanan Splitbro, kullanıcı dostu arayüzü ve hızlı işlem adımları sayesinde ortak harcamaları zahmetsiz ve şeffaf bir şekilde yönetmeyi amaçlar.
+Splitbro, günlük hayatta sıkça yaşanan “hesabı kim ödedi, kim ne aldı, bana ne düştü?” karmaşasını ortadan kaldırmak için geliştirilmiştir. Kullanıcılar uygulama üzerinden fişin fotoğrafını çeker, yapay zekâ destekli sistem fişteki ürünleri otomatik olarak tanır. Ardından kullanıcılar hangi ürünü kimin aldığını işaretler ve uygulama tüm hesaplamaları otomatik olarak yapar. Web ve mobil platformlarda çalışacak şekilde tasarlanan Splitbro, kullanıcı dostu arayüzü ve hızlı işlem adımları sayesinde ortak harcamaları zahmetsiz ve şeffaf bir şekilde yönetmeyi amaçlar.
 
 ---
 
@@ -39,12 +37,12 @@ Finansal Teknolojiler (FinTech) / Yapay Zekâ Destekli Web & Mobil Uygulama
 
 ## Dokümantasyon
 
-- Gereksinim Analizi  
-- REST API Tasarımı  
-- REST API Dokümantasyonu  
-- Web Front-End  
-- Mobil Front-End  
-- Video Sunum  
+- Gereksinim Analizi:  
+- REST API Tasarımı:  
+- REST API Dokümantasyonu:  
+- Web Front-End:  
+- Mobil Front-End:  
+- Video Sunum:  
 
 ---
 
