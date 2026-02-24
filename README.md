@@ -2,7 +2,7 @@
 
 ## Proje Hakkında
 
-![Splitbro Preview](Cagatay-Candas/Splitbro_img.png)
+![Splitbro Preview](Splitbro_img.png)
 
 ## Proje Tanımı
 
