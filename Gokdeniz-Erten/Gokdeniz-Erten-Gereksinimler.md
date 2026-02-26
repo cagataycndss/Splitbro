@@ -31,9 +31,9 @@
 7. Profil Resmi Güncelleme
 
    * **API Metodu:** `PUT /users/{userId}/avatar`
-   * **Açıklama:** Kullanıcının profil resmini yeni bir görselle değiştirmesini veya silmesini sağlar.
+   * **Açıklama:** Kullanıcının profil resmini yeni bir görselle değiştirmesini sağlar.
 
 8. Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme
 
-   * **API Metodu:** `POST /groups/{groupId}/expenses/scan`
+   * **API Metodu:** `POST /ai/groups/{groupId}/expenses/scan`
    * **Açıklama:** Yüklenen fiş/fatura görüntüsündeki verileri yapay zeka (OCR) ile okuyup otomatik gider kaydı oluşturur.
