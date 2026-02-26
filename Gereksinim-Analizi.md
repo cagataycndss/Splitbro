@@ -41,64 +41,64 @@
     - **Açıklama:** Yeni kullanıcıların sisteme kayıt olmasını sağlar. Kullanıcıdan alınan bilgiler doğrulanarak veritabanına kaydedilir ve hesap oluşturulur.
 
 11. **Kullanıcı Girişi** (Furkan Kasalak)
-   - **API Metodu:** `POST /auth/login`
-   - **Açıklama:** Kayıtlı kullanıcıların email ve şifre ile kimlik doğrulaması yaparak sisteme erişmesini sağlar. Başarılı işlem sonucunda bir erişim anahtarı (token) döndürülür.
+    - **API Metodu:** `POST /auth/login`
+    - **Açıklama:** Kayıtlı kullanıcıların email ve şifre ile kimlik doğrulaması yaparak sisteme erişmesini sağlar. Başarılı işlem sonucunda bir erişim anahtarı (token) döndürülür.
 
 12. **Şifre Değiştirme** (Furkan Kasalak)
-   - **API Metodu:** `PUT /users/{userId}/change-password`
-   - **Açıklama:** Mevcut kullanıcının şifresini güvenli bir şekilde güncellemesini sağlar. Eski şifre doğrulaması yapıldıktan sonra yeni şifre sisteme tanımlanır.
+    - **API Metodu:** `PUT /users/{userId}/change-password`
+    - **Açıklama:** Mevcut kullanıcının şifresini güvenli bir şekilde güncellemesini sağlar. Eski şifre doğrulaması yapıldıktan sonra yeni şifre sisteme tanımlanır.
 
 13. **Profil Bilgilerini Görüntüleme** (Furkan Kasalak)
-   - **API Metodu:** `GET /users/{userId}/profile`
-   - **Açıklama:** Giriş yapmış kullanıcının ad, soyad, email gibi kişisel profil detaylarını görüntülemesini sağlar.
+    - **API Metodu:** `GET /users/{userId}/profile`
+    - **Açıklama:** Giriş yapmış kullanıcının ad, soyad, email gibi kişisel profil detaylarını görüntülemesini sağlar.
 
 14. **Hesap Silme** (Furkan Kasalak)
-   - **API Metodu:** `DELETE /users/{userId}/account`
-   - **Açıklama:** Kullanıcının isteği üzerine hesabını ve ilgili kişisel verilerini sistemden kalıcı olarak silmesini sağlar.
+    - **API Metodu:** `DELETE /users/{userId}/account`
+    - **Açıklama:** Kullanıcının isteği üzerine hesabını ve ilgili kişisel verilerini sistemden kalıcı olarak silmesini sağlar.
 
 15. **Profil Resmi Ekleme** (Furkan Kasalak)
-   - **API Metodu:** `POST /users/{userId}/avatar`
-   - **Açıklama:** Kullanıcının profilinde görünecek olan görsel dosyasını sisteme yüklemesini ve profilini kişiselleştirmesini sağlar.
+    - **API Metodu:** `POST /users/{userId}/avatar`
+    - **Açıklama:** Kullanıcının profilinde görünecek olan görsel dosyasını sisteme yüklemesini ve profilini kişiselleştirmesini sağlar.
 
 16. **Kullanıcının Gruplarını Listeleme** (Furkan Kasalak)
-   - **API Metodu:** `GET /users/{userId}/groups`
-   - **Açıklama:** Kullanıcının dahil olduğu veya yönettiği tüm grupların listesini, grup detaylarıyla birlikte getirir.
+    - **API Metodu:** `GET /users/{userId}/groups`
+    - **Açıklama:** Kullanıcının dahil olduğu veya yönettiği tüm grupların listesini, grup detaylarıyla birlikte getirir.
 
 17. **AI – Anomali Tespiti & Fiyat Doğrulama** (Furkan Kasalak)
-   - **API Metodu:** `POST /ai/verify-price`
-   - **Açıklama:** Yapay zeka algoritmalarını kullanarak girilen verilerdeki sıra dışı durumları (anomali) tespit eder ve fiyatların piyasa/sistem kriterlerine uygunluğunu doğrular.
+    - **API Metodu:** `POST /ai/verify-price`
+    - **Açıklama:** Yapay zeka algoritmalarını kullanarak girilen verilerdeki sıra dışı durumları (anomali) tespit eder ve fiyatların piyasa/sistem kriterlerine uygunluğunu doğrular.
 
 18. **Profil Bilgilerini Güncelleme** (Gökdeniz Erten)
-   - **API Metodu:** `PUT /users/{userId}`
-   - **Açıklama:** Kullanıcının temel kişisel bilgilerini (ad, soyad, telefon vb.) güncellemesini sağlar.
+    - **API Metodu:** `PUT /users/{userId}`
+    - **Açıklama:** Kullanıcının temel kişisel bilgilerini (ad, soyad, telefon vb.) güncellemesini sağlar.
 
 19. **Grup Oluşturma** (Gökdeniz Erten)
-   - **API Metodu:** `POST /groups`
-   - **Açıklama:** Kullanıcıların yeni bir harcama veya etkinlik grubu oluşturmasını sağlar.
+    - **API Metodu:** `POST /groups`
+    - **Açıklama:** Kullanıcıların yeni bir harcama veya etkinlik grubu oluşturmasını sağlar.
 
 20. **Gruba Üye Ekleme** (Gökdeniz Erten)
-   - **API Metodu:** `POST /groups/{groupId}/members`
-   - **Açıklama:** Mevcut bir gruba yeni kullanıcıların dahil edilmesini sağlar.
+    - **API Metodu:** `POST /groups/{groupId}/members`
+    - **Açıklama:** Mevcut bir gruba yeni kullanıcıların dahil edilmesini sağlar.
 
 21. **Grup Üyelerini Listeleme** (Gökdeniz Erten)
-   - **API Metodu:** `GET /groups/{groupId}/members`
-   - **Açıklama:** Belirli bir gruptaki tüm üyeleri ve gruptaki rollerini listeler.
+    - **API Metodu:** `GET /groups/{groupId}/members`
+    - **Açıklama:** Belirli bir gruptaki tüm üyeleri ve gruptaki rollerini listeler.
 
 22. **Gruptan Üye Çıkarma** (Gökdeniz Erten)
-   - **API Metodu:** `DELETE /groups/{groupId}/members/{userId}`
-   - **Açıklama:** Belirli bir kullanıcının gruptan çıkarılmasını veya kendi isteğiyle ayrılmasını sağlar.
+    - **API Metodu:** `DELETE /groups/{groupId}/members/{userId}`
+    - **Açıklama:** Belirli bir kullanıcının gruptan çıkarılmasını veya kendi isteğiyle ayrılmasını sağlar.
 
 23. **Manuel Gider Ekleme** (Gökdeniz Erten)
-   - **API Metodu:** `POST /groups/{groupId}/expenses`
-   - **Açıklama:** Kullanıcıların ilgili gruba tutar, başlık ve tarih belirterek manuel harcama eklemesini sağlar.
+    - **API Metodu:** `POST /groups/{groupId}/expenses`
+    - **Açıklama:** Kullanıcıların ilgili gruba tutar, başlık ve tarih belirterek manuel harcama eklemesini sağlar.
 
 24. **Profil Resmi Güncelleme** (Gökdeniz Erten)
-   - **API Metodu:** `PUT /users/{userId}/avatar`
-   - **Açıklama:** Kullanıcının profil resmini yeni bir görselle değiştirmesini sağlar.
+    - **API Metodu:** `PUT /users/{userId}/avatar`
+    - **Açıklama:** Kullanıcının profil resmini yeni bir görselle değiştirmesini sağlar.
 
 25. **Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme** (Gökdeniz Erten)
-   - **API Metodu:** `POST /groups/{groupId}/expenses/scan`
-   - **Açıklama:** Yüklenen fiş/fatura görüntüsündeki verileri yapay zeka (OCR) ile okuyup otomatik gider kaydı oluşturur.
+    - **API Metodu:** `POST /groups/{groupId}/expenses/scan`
+    - **Açıklama:** Yüklenen fiş/fatura görüntüsündeki verileri yapay zeka (OCR) ile okuyup otomatik gider kaydı oluşturur.
 
 # Gereksinim Dağılımları
 
