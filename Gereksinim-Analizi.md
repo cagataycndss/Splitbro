@@ -37,8 +37,8 @@
    - **Açıklama:** Sistemin, fişlerdeki ürünleri (gıda, içecek, temizlik vb.) otomatik kategorilere ayırmasını sağlar.
 
 10. **Kullanıcı Kaydı** (Furkan Kasalak)
-   - **API Metodu:** `POST /auth/register`
-   - **Açıklama:** Yeni kullanıcıların sisteme kayıt olmasını sağlar. Kullanıcıdan alınan bilgiler doğrulanarak veritabanına kaydedilir ve hesap oluşturulur.
+    - **API Metodu:** `POST /auth/register`
+    - **Açıklama:** Yeni kullanıcıların sisteme kayıt olmasını sağlar. Kullanıcıdan alınan bilgiler doğrulanarak veritabanına kaydedilir ve hesap oluşturulur.
 
 11. **Kullanıcı Girişi** (Furkan Kasalak)
    - **API Metodu:** `POST /auth/login`
