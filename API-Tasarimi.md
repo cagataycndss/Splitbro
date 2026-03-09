@@ -1,78 +1,49 @@
-# API Tasarımı - OpenAPI Specification Örneği
+# API Tasarımı
 
-Bu doküman, OpenAPI Specification (OAS) 3.0 standardına göre hazırlanmış örnek bir API tasarımını içermektedir.
+**OpenAPI Spesifikasyon Dosyası:** [SiplitbroAPI.yaml](SplitbroAPI.yaml)
 
-## OpenAPI Nedir?
-
-**OpenAPI** (eski adıyla Swagger), RESTful API'lerin tasarımı, dokümantasyonu ve kullanımı için kullanılan açık bir spesifikasyondur. OpenAPI, API'lerin yapısını, endpoint'lerini, parametrelerini, request/response formatlarını ve güvenlik gereksinimlerini standart bir formatta tanımlamanıza olanak sağlar.
-
-### Temel Özellikler:
-
-- **Standart Format**: YAML veya JSON formatında API'yi tanımlar
-- **Otomatik Dokümantasyon**: Swagger UI gibi araçlarla interaktif dokümantasyon oluşturur
-- **Kod Üretimi**: Client ve server kodlarını otomatik olarak üretebilir
-- **Test Kolaylığı**: API'leri doğrudan dokümantasyondan test edebilirsiniz
-- **Takım İşbirliği**: Frontend ve backend ekipleri arasında net bir sözleşme sağlar
-
-### Neden Kullanılır?
-
-1. **Tutarlılık**: Tüm API'ler aynı standartta dokümante edilir
-2. **Zaman Tasarrufu**: Otomatik dokümantasyon ve kod üretimi
-3. **Hata Azaltma**: API tasarımı kodlamadan önce netleşir
-4. **Kolay Entegrasyon**: Farklı ekipler ve sistemler arasında entegrasyon kolaylaşır
-
-## Genel Bakış
-
-Bu örnek, bir e-ticaret platformu için kullanıcı ve ürün yönetimi API'sini göstermektedir.
+Bu doküman, OpenAPI Specification (OAS) 3.0 standardına göre hazırlanmış bir API tasarımını içermektedir.
 
 ## OpenAPI Specification
 
 ```yaml
 openapi: 3.0.3
 info:
-  title: E-Ticaret API
+  title: Splitbro API
   description: |
-    E-ticaret platformu için RESTful API.
+    Grup içi harcama paylaşımı, masraf takibi ve AI destekli fiş okuma platformu için RESTful API.
     
     ## Özellikler
-    - Kullanıcı yönetimi
-    - Ürün katalog yönetimi
-    - Sipariş işlemleri
+    - Kullanıcı ve profil yönetimi
+    - Grup ve üye işlemleri
+    - Manuel ve AI destekli gider yönetimi (Fiş tarama)
+    - Otomatik borç/alacak hesaplama
     - JWT tabanlı kimlik doğrulama
   version: 1.0.0
   contact:
-    name: API Destek Ekibi
-    email: api-support@yazmuh.com
-    url: https://api.yazmuh.com/support
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
+    name: Splitbro Geliştirici Ekibi
+    email: dev@splitbro.com
 
-servers:
-  - url: https://api.yazmuh.com/v1
-    description: Production server
-  - url: https://staging-api.yazmuh.com/v1
-    description: Staging server
-  - url: http://localhost:3000/v1
-    description: Development server
 
 tags:
-  - name: users
-    description: Kullanıcı yönetimi işlemleri
-  - name: products
-    description: Ürün katalog işlemleri
-  - name: orders
-    description: Sipariş işlemleri
   - name: auth
     description: Kimlik doğrulama işlemleri
+  - name: users
+    description: Kullanıcı ve profil yönetimi
+  - name: groups
+    description: Grup ve üye yönetimi
+  - name: expenses
+    description: Gider ve harcama yönetimi
+  - name: ai
+    description: Yapay zeka destekli işlemler
 
 paths:
   /auth/register:
     post:
       tags:
         - auth
-      summary: Yeni kullanıcı kaydı
-      description: Sisteme yeni bir kullanıcı kaydeder
+      summary: Kullanıcı Kaydı
+      description: Yeni kullanıcıların sisteme kayıt olmasını sağlar.
       operationId: registerUser
       requestBody:
         required: true
@@ -80,36 +51,22 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserRegistration'
-            examples:
-              example1:
-                summary: Örnek kullanıcı kaydı
-                value:
-                  email: kullanici@example.com
-                  password: Guvenli123!
-                  firstName: Ahmet
-                  lastName: Yılmaz
       responses:
         '201':
           description: Kullanıcı başarıyla oluşturuldu
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/AuthToken'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '409':
-          description: Email adresi zaten kullanımda
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
   /auth/login:
     post:
       tags:
         - auth
-      summary: Kullanıcı girişi
-      description: Email ve şifre ile giriş yapar, JWT token döner
+      summary: Kullanıcı Girişi
+      description: Email ve şifre ile giriş yapar, JWT token döner.
       operationId: loginUser
       requestBody:
         required: true
@@ -127,65 +84,13 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /users:
-    get:
-      tags:
-        - users
-      summary: Kullanıcı listesi
-      description: Sistemdeki tüm kullanıcıları listeler (sayfalama ile)
-      operationId: listUsers
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - name: role
-          in: query
-          description: Kullanıcı rolüne göre filtrele
-          schema:
-            type: string
-            enum: [admin, user, guest]
-      responses:
-        '200':
-          description: Başarılı
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserList'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
   /users/{userId}:
-    get:
-      tags:
-        - users
-      summary: Kullanıcı detayı
-      description: Belirli bir kullanıcının detay bilgilerini getirir
-      operationId: getUserById
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/UserIdParam'
-      responses:
-        '200':
-          description: Başarılı
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    
     put:
       tags:
         - users
-      summary: Kullanıcı güncelle
-      description: Kullanıcı bilgilerini günceller
-      operationId: updateUser
+      summary: Profil Bilgilerini Güncelleme
+      description: Kullanıcının temel kişisel bilgilerini (ad, soyad, telefon vb.) günceller.
+      operationId: updateProfile
       security:
         - bearerAuth: []
       parameters:
@@ -198,81 +103,455 @@ paths:
               $ref: '#/components/schemas/UserUpdate'
       responses:
         '200':
-          description: Kullanıcı başarıyla güncellendi
+          description: Başarılı
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/profile:
+    get:
+      tags:
+        - users
+      summary: Profil Bilgilerini Görüntüleme
+      description: Giriş yapmış kullanıcının profil detaylarını getirir.
+      operationId: getUserProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Başarılı
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    
+
+  /users/{userId}/account:
     delete:
       tags:
         - users
-      summary: Kullanıcı sil
-      description: Kullanıcıyı sistemden siler
-      operationId: deleteUser
+      summary: Hesap Silme
+      description: Kullanıcının hesabını ve verilerini kalıcı olarak siler.
+      operationId: deleteAccount
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/UserIdParam'
       responses:
         '204':
-          description: Kullanıcı başarıyla silindi
+          description: Hesap başarıyla silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/change-password:
+    put:
+      tags:
+        - users
+      summary: Şifre Değiştirme
+      description: Mevcut kullanıcının şifresini günceller.
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+      responses:
+        '200':
+          description: Şifre başarıyla değiştirildi
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/avatar:
+    post:
+      tags:
+        - users
+      summary: Profil Resmi Ekleme
+      description: Kullanıcının profil resmini sisteme yükler.
+      operationId: uploadAvatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Avatar yüklendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags:
+        - users
+      summary: Profil Resmi Güncelleme
+      description: Mevcut profil resmini değiştirir.
+      operationId: updateAvatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Avatar güncellendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      tags:
+        - users
+      summary: Profil Resmi Silme
+      description: Kullanıcının profil resmini kalıcı olarak siler.
+      operationId: deleteAvatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '204':
+          description: Avatar silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/groups:
+    get:
+      tags:
+        - users
+      summary: Kullanıcının Gruplarını Listeleme
+      description: Kullanıcının dahil olduğu veya yönettiği tüm grupları getirir.
+      operationId: getUserGroups
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups:
+    post:
+      tags:
+        - groups
+      summary: Grup Oluşturma
+      description: Yeni bir harcama veya etkinlik grubu oluşturur.
+      operationId: createGroup
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Grup oluşturuldu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}:
+    put:
+      tags:
+        - groups
+      summary: Grup Bilgilerini Güncelleme
+      description: Grup sahibinin grup bilgilerini değiştirmesini sağlar.
+      operationId: updateGroup
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdate'
+      responses:
+        '200':
+          description: Grup güncellendi
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - groups
+      summary: Grup Silme
+      description: Grup sahibinin grubu kalıcı olarak silmesini sağlar.
+      operationId: deleteGroup
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      responses:
+        '204':
+          description: Grup silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
-  /products:
+  /groups/{groupId}/members:
     get:
       tags:
-        - products
-      summary: Ürün listesi
-      description: Tüm ürünleri listeler
-      operationId: listProducts
+        - groups
+      summary: Grup Üyelerini Listeleme
+      description: Belirli bir gruptaki tüm üyeleri ve rollerini listeler.
+      operationId: getGroupMembers
+      security:
+        - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-        - name: category
-          in: query
-          description: Kategoriye göre filtrele
-          schema:
-            type: string
-        - name: minPrice
-          in: query
-          description: Minimum fiyat
-          schema:
-            type: number
-            format: float
-        - name: maxPrice
-          in: query
-          description: Maximum fiyat
-          schema:
-            type: number
-            format: float
+        - $ref: '#/components/parameters/GroupIdParam'
       responses:
         '200':
           description: Başarılı
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductList'
-    
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags:
-        - products
-      summary: Yeni ürün ekle
-      description: Sisteme yeni bir ürün ekler
-      operationId: createProduct
+        - groups
+      summary: Gruba Üye Ekleme
+      description: Mevcut bir gruba yeni kullanıcı ekler.
+      operationId: addGroupMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Üye eklendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/members/{userId}:
+    delete:
+      tags:
+        - groups
+      summary: Gruptan Üye Çıkarma
+      description: Kullanıcının gruptan çıkarılmasını veya ayrılmasını sağlar.
+      operationId: removeGroupMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '204':
+          description: Üye gruptan çıkarıldı
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/expenses:
+    post:
+      tags:
+        - expenses
+      summary: Manuel Gider Ekleme
+      description: İlgili gruba tutar, başlık ve tarih belirterek manuel harcama ekler.
+      operationId: createManualExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseCreate'
+      responses:
+        '201':
+          description: Gider başarıyla eklendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/expenses/scan:
+    post:
+      tags:
+        - expenses
+        - ai
+      summary: AI Destekli Fiş Okuma ve Gider Ekleme
+      description: Yüklenen fiş görüntüsündeki verileri yapay zeka ile okuyup otomatik gider kaydı oluşturur.
+      operationId: scanReceiptAndCreateExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                receiptImage:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Fiş okundu ve gider oluşturuldu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}:
+    get:
+      tags:
+        - expenses
+      summary: Gider Detayını Görüntüleme
+      description: Bir giderin tüm detaylarını (ürünler, kimin ödediği vb.) getirir.
+      operationId: getExpenseDetails
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - expenses
+      summary: Gider Silme
+      description: Eklenen bir gideri kalıcı olarak siler.
+      operationId: deleteExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      responses:
+        '204':
+          description: Gider silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}/items:
+    post:
+      tags:
+        - expenses
+      summary: Gidere Ürün Ekleme
+      description: Oluşturulan gidere yeni ürün kalemleri ekler.
+      operationId: addExpenseItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseItemCreate'
+      responses:
+        '201':
+          description: Ürün eklendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}/items/{itemId}/split:
+    post:
+      tags:
+        - expenses
+      summary: Ürünü Kişilere Atama
+      description: Her ürün için hangi grup üyelerinin paylaşacağı belirlenir.
+      operationId: splitExpenseItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+        - $ref: '#/components/parameters/ItemIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignedUserIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Ürün başarıyla paylaştırıldı
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}/calculate:
+    get:
+      tags:
+        - expenses
+      summary: Otomatik Borç Hesaplama
+      description: Sistemin tüm ürünler girildikten sonra kimin ne kadar ödeyeceğini anlık hesaplamasını sağlar.
+      operationId: calculateDebts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      responses:
+        '200':
+          description: Hesaplama başarılı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DebtCalculation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ai/item-categorization:
+    post:
+      tags:
+        - ai
+      summary: Ürün Kategorilendirme & Otomatik Etiketleme
+      description: Fişlerdeki ürünleri (gıda, temizlik vb.) AI ile otomatik kategorilere ayırır.
+      operationId: categorizeItemWithAI
       security:
         - bearerAuth: []
       requestBody:
@@ -280,62 +559,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductCreate'
-      responses:
-        '201':
-          description: Ürün başarıyla oluşturuldu
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Product'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /products/{productId}:
-    get:
-      tags:
-        - products
-      summary: Ürün detayı
-      description: Belirli bir ürünün detay bilgilerini getirir
-      operationId: getProductById
-      parameters:
-        - $ref: '#/components/parameters/ProductIdParam'
+              type: object
+              properties:
+                itemName:
+                  type: string
+                  example: "Sütaş Ayran 1L"
       responses:
         '200':
           description: Başarılı
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                type: object
+                properties:
+                  category:
+                    type: string
+                    example: "Gıda/İçecek"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
-  /orders:
-    get:
-      tags:
-        - orders
-      summary: Sipariş listesi
-      description: Kullanıcının siparişlerini listeler
-      operationId: listOrders
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/PageParam'
-        - $ref: '#/components/parameters/LimitParam'
-      responses:
-        '200':
-          description: Başarılı
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderList'
-    
+  /ai/verify-price:
     post:
       tags:
-        - orders
-      summary: Yeni sipariş oluştur
-      description: Yeni bir sipariş oluşturur
-      operationId: createOrder
+        - ai
+      summary: Anomali Tespiti & Fiyat Doğrulama
+      description: Girilen verilerdeki sıra dışı fiyatları (anomali) tespit eder.
+      operationId: verifyPriceWithAI
       security:
         - bearerAuth: []
       requestBody:
@@ -343,14 +592,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OrderCreate'
+              type: object
+              properties:
+                itemName:
+                  type: string
+                price:
+                  type: number
+                  format: float
       responses:
-        '201':
-          description: Sipariş başarıyla oluşturuldu
+        '200':
+          description: Başarılı
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Order'
+                type: object
+                properties:
+                  isAnomaly:
+                    type: boolean
+                  confidenceScore:
+                    type: number
+                    format: float
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
 components:
   securitySchemes:
@@ -365,133 +628,80 @@ components:
       name: userId
       in: path
       required: true
-      description: Kullanıcı ID'si
       schema:
         type: string
         format: uuid
-    
-    ProductIdParam:
-      name: productId
+    GroupIdParam:
+      name: groupId
       in: path
       required: true
-      description: Ürün ID'si
       schema:
         type: string
         format: uuid
-    
-    PageParam:
-      name: page
-      in: query
-      description: Sayfa numarası
+    ExpenseIdParam:
+      name: expenseId
+      in: path
+      required: true
       schema:
-        type: integer
-        minimum: 1
-        default: 1
-    
-    LimitParam:
-      name: limit
-      in: query
-      description: Sayfa başına kayıt sayısı
+        type: string
+        format: uuid
+    ItemIdParam:
+      name: itemId
+      in: path
+      required: true
       schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 20
+        type: string
+        format: uuid
 
   schemas:
     User:
       type: object
-      required:
-        - id
-        - email
-        - firstName
-        - lastName
-        - role
-        - createdAt
       properties:
         id:
           type: string
           format: uuid
-          description: Kullanıcı benzersiz kimliği
-          example: "123e4567-e89b-12d3-a456-426614174000"
+        firstName:
+          type: string
+        lastName:
+          type: string
         email:
           type: string
           format: email
-          description: Kullanıcı email adresi
-          example: "kullanici@example.com"
-        firstName:
+        avatarUrl:
           type: string
-          description: Ad
-          example: "Ahmet"
-        lastName:
-          type: string
-          description: Soyad
-          example: "Yılmaz"
-        role:
-          type: string
-          enum: [admin, user, guest]
-          description: Kullanıcı rolü
-          example: "user"
+          format: uri
         createdAt:
           type: string
           format: date-time
-          description: Oluşturulma tarihi
-          example: "2024-01-15T10:30:00Z"
-        updatedAt:
-          type: string
-          format: date-time
-          description: Güncellenme tarihi
-          example: "2024-01-20T14:45:00Z"
-        phone:
-          type: string
-          description: Telefon numarası
-          example: "+905551234567"
 
     UserRegistration:
       type: object
       required:
-        - email
-        - password
         - firstName
         - lastName
+        - email
+        - password
       properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
         email:
           type: string
           format: email
-          example: "kullanici@example.com"
         password:
           type: string
           format: password
-          minLength: 8
-          example: "Guvenli123!"
-        firstName:
-          type: string
-          minLength: 2
-          example: "Ahmet"
-        lastName:
-          type: string
-          minLength: 2
-          example: "Yılmaz"
 
     UserUpdate:
       type: object
       properties:
         firstName:
           type: string
-          minLength: 2
-          example: "Ahmet"
         lastName:
           type: string
-          minLength: 2
-          example: "Yılmaz"
-        email:
-          type: string
-          format: email
-          example: "yeniemail@example.com"
         phone:
           type: string
-          description: Telefon numarası
-          example: "+905551234567"
 
     LoginCredentials:
       type: object
@@ -502,277 +712,156 @@ components:
         email:
           type: string
           format: email
-          example: "kullanici@example.com"
         password:
           type: string
           format: password
-          example: "Guvenli123!"
+
+    ChangePassword:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
 
     AuthToken:
       type: object
-      required:
-        - token
-        - expiresIn
-        - user
       properties:
         token:
           type: string
-          description: JWT access token
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         expiresIn:
           type: integer
-          description: Token geçerlilik süresi (saniye)
-          example: 3600
         user:
           $ref: '#/components/schemas/User'
 
-    Product:
+    Group:
       type: object
-      required:
-        - id
-        - name
-        - price
-        - category
-        - stock
       properties:
         id:
           type: string
           format: uuid
-          example: "987e6543-e21b-12d3-a456-426614174000"
         name:
           type: string
-          description: Ürün adı
-          example: "Laptop"
         description:
           type: string
-          description: Ürün açıklaması
-          example: "15.6 inç, 16GB RAM, 512GB SSD"
-        price:
-          type: number
-          format: float
-          description: Ürün fiyatı (TL)
-          example: 25999.99
-        category:
+        ownerId:
           type: string
-          description: Ürün kategorisi
-          example: "Elektronik"
-        stock:
-          type: integer
-          description: Stok miktarı
-          example: 50
-        imageUrl:
-          type: string
-          format: uri
-          description: Ürün görseli URL'i
-          example: "https://example.com/images/laptop.jpg"
+          format: uuid
         createdAt:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
 
-    ProductCreate:
+    GroupCreate:
       type: object
       required:
         - name
-        - price
-        - category
-        - stock
       properties:
         name:
           type: string
-          minLength: 3
         description:
           type: string
-        price:
-          type: number
-          format: float
-          minimum: 0
-        category:
-          type: string
-        stock:
-          type: integer
-          minimum: 0
-        imageUrl:
-          type: string
-          format: uri
 
-    Order:
+    GroupUpdate:
       type: object
-      required:
-        - id
-        - userId
-        - items
-        - totalAmount
-        - status
-        - createdAt
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    Expense:
+      type: object
       properties:
         id:
           type: string
           format: uuid
-        userId:
+        groupId:
           type: string
           format: uuid
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrderItem'
+        paidById:
+          type: string
+          format: uuid
+        title:
+          type: string
         totalAmount:
           type: number
           format: float
-          description: Toplam tutar (TL)
-        status:
-          type: string
-          enum: [pending, processing, shipped, delivered, cancelled]
-          description: Sipariş durumu
-        shippingAddress:
-          $ref: '#/components/schemas/Address'
-        createdAt:
+        date:
           type: string
           format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-
-    OrderCreate:
-      type: object
-      required:
-        - items
-        - shippingAddress
-      properties:
         items:
           type: array
-          minItems: 1
           items:
-            type: object
-            required:
-              - productId
-              - quantity
-            properties:
-              productId:
-                type: string
-                format: uuid
-              quantity:
-                type: integer
-                minimum: 1
-        shippingAddress:
-          $ref: '#/components/schemas/Address'
+            $ref: '#/components/schemas/ExpenseItem'
 
-    OrderItem:
-      type: object
-      properties:
-        productId:
-          type: string
-          format: uuid
-        productName:
-          type: string
-        quantity:
-          type: integer
-        unitPrice:
-          type: number
-          format: float
-        totalPrice:
-          type: number
-          format: float
-
-    Address:
+    ExpenseCreate:
       type: object
       required:
-        - street
-        - city
-        - postalCode
-        - country
+        - title
+        - totalAmount
       properties:
-        street:
+        title:
           type: string
-          example: "Atatürk Caddesi No:123"
-        city:
+        totalAmount:
+          type: number
+          format: float
+        date:
           type: string
-          example: "İstanbul"
-        postalCode:
-          type: string
-          example: "34000"
-        country:
-          type: string
-          example: "Türkiye"
+          format: date-time
 
-    UserList:
+    ExpenseItem:
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+        category:
+          type: string
 
-    ProductList:
+    ExpenseItemCreate:
+      type: object
+      required:
+        - name
+        - price
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+
+    DebtCalculation:
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Product'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-
-    OrderList:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Order'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: integer
-          description: Mevcut sayfa
-          example: 1
-        limit:
-          type: integer
-          description: Sayfa başına kayıt
-          example: 20
-        totalPages:
-          type: integer
-          description: Toplam sayfa sayısı
-          example: 5
-        totalItems:
-          type: integer
-          description: Toplam kayıt sayısı
-          example: 95
+        debtorId:
+          type: string
+          format: uuid
+          description: Borçlu olan kişi
+        creditorId:
+          type: string
+          format: uuid
+          description: Alacaklı olan kişi
+        amount:
+          type: number
+          format: float
 
     Error:
       type: object
-      required:
-        - code
-        - message
       properties:
         code:
           type: string
-          description: Hata kodu
-          example: "VALIDATION_ERROR"
         message:
           type: string
-          description: Hata mesajı
-          example: "Geçersiz email adresi"
-        details:
-          type: array
-          description: Detaylı hata bilgileri
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                example: "email"
-              message:
-                type: string
-                example: "Email formatı geçersiz"
 
   responses:
     BadRequest:
@@ -781,135 +870,22 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: "BAD_REQUEST"
-            message: "İstek parametreleri geçersiz"
-    
     Unauthorized:
-      description: Yetkisiz erişim
+      description: Yetkisiz erişim veya geçersiz token
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: "UNAUTHORIZED"
-            message: "Kimlik doğrulama başarısız"
-    
     NotFound:
       description: Kaynak bulunamadı
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: "NOT_FOUND"
-            message: "İstenen kaynak bulunamadı"
-    
     Forbidden:
       description: Erişim reddedildi
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            code: "FORBIDDEN"
-            message: "Bu işlem için yetkiniz bulunmamaktadır"
 ```
-
-## API Tasarım Prensipleri
-
-### 1. RESTful Yaklaşım
-- **Kaynak odaklı URL'ler**: `/users`, `/products`, `/orders`
-- **HTTP metodları**: GET (okuma), POST (oluşturma), PUT (güncelleme), DELETE (silme)
-- **Durum kodları**: 200 (başarılı), 201 (oluşturuldu), 404 (bulunamadı), vb.
-
-### 2. Versiyonlama
-- URL tabanlı versiyonlama: `/v1/users`
-- Geriye dönük uyumluluk için önemli
-
-### 3. Güvenlik
-- **JWT Authentication**: Bearer token ile kimlik doğrulama
-- **HTTPS**: Tüm endpoint'ler için zorunlu
-- **Rate Limiting**: API kötüye kullanımını önleme
-
-### 4. Sayfalama
-- `page` ve `limit` parametreleri
-- Response'da pagination metadata
-
-### 5. Filtreleme ve Sıralama
-- Query parametreleri ile filtreleme
-- Örnek: `?category=Elektronik&minPrice=1000`
-
-### 6. Hata Yönetimi
-- Standart hata formatı
-- Anlamlı hata kodları ve mesajları
-- Detaylı hata bilgileri (field-level validation)
-
-### 7. Dokümantasyon
-- OpenAPI Specification ile otomatik dokümantasyon
-- Swagger UI ile interaktif API testi
-- Örnek request/response'lar
-
-## Kullanım Örnekleri
-
-### Kullanıcı Kaydı
-```bash
-curl -X POST https://api.yazmuh.com/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "kullanici@example.com",
-    "password": "Guvenli123!",
-    "firstName": "Ahmet",
-    "lastName": "Yılmaz"
-  }'
-```
-
-### Giriş Yapma
-```bash
-curl -X POST https://api.yazmuh.com/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "kullanici@example.com",
-    "password": "Guvenli123!"
-  }'
-```
-
-### Ürün Listesi (Filtreleme ile)
-```bash
-curl -X GET "https://api.yazmuh.com/v1/products?category=Elektronik&minPrice=1000&page=1&limit=20"
-```
-
-### Yeni Sipariş Oluşturma
-```bash
-curl -X POST https://api.yazmuh.com/v1/orders \
-  -H "Authorization: Bearer <JWT_TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "items": [
-      {
-        "productId": "987e6543-e21b-12d3-a456-426614174000",
-        "quantity": 2
-      }
-    ],
-    "shippingAddress": {
-      "street": "Atatürk Caddesi No:123",
-      "city": "İstanbul",
-      "postalCode": "34000",
-      "country": "Türkiye"
-    }
-  }'
-```
-
-## Araçlar ve Kaynaklar
-
-### OpenAPI Editörleri
-- [Swagger Editor](https://editor.swagger.io/) - Online OpenAPI editörü
-- [VS Code OpenAPI Extension](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi)
-
-### Dokümantasyon Araçları
-- [Swagger UI](https://swagger.io/tools/swagger-ui/) - İnteraktif API dokümantasyonu
-- [Postman](https://www.postman.com/) - API testş
-
-### Validasyon
-- [OpenAPI Validator](https://apitools.dev/swagger-parser/online/) - Spec doğrulama
-- [Spectral](https://stoplight.io/open-source/spectral) - API linting
