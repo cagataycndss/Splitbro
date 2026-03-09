@@ -1,0 +1,881 @@
+openapi: 3.0.3
+info:
+  title: Splitbro API
+  description: |
+    Grup içi harcama paylaşımı, masraf takibi ve AI destekli fiş okuma platformu için RESTful API.
+    
+    ## Özellikler
+    - Kullanıcı ve profil yönetimi
+    - Grup ve üye işlemleri
+    - Manuel ve AI destekli gider yönetimi (Fiş tarama)
+    - Otomatik borç/alacak hesaplama
+    - JWT tabanlı kimlik doğrulama
+  version: 1.0.0
+  contact:
+    name: Splitbro Geliştirici Ekibi
+    email: dev@splitbro.com
+
+
+tags:
+  - name: auth
+    description: Kimlik doğrulama işlemleri
+  - name: users
+    description: Kullanıcı ve profil yönetimi
+  - name: groups
+    description: Grup ve üye yönetimi
+  - name: expenses
+    description: Gider ve harcama yönetimi
+  - name: ai
+    description: Yapay zeka destekli işlemler
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: Kullanıcı Kaydı
+      description: Yeni kullanıcıların sisteme kayıt olmasını sağlar.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: Kullanıcı başarıyla oluşturuldu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Kullanıcı Girişi
+      description: Email ve şifre ile giriş yapar, JWT token döner.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCredentials'
+      responses:
+        '200':
+          description: Giriş başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}:
+    put:
+      tags:
+        - users
+      summary: Profil Bilgilerini Güncelleme
+      description: Kullanıcının temel kişisel bilgilerini (ad, soyad, telefon vb.) günceller.
+      operationId: updateProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Başarılı
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/profile:
+    get:
+      tags:
+        - users
+      summary: Profil Bilgilerini Görüntüleme
+      description: Giriş yapmış kullanıcının profil detaylarını getirir.
+      operationId: getUserProfile
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/account:
+    delete:
+      tags:
+        - users
+      summary: Hesap Silme
+      description: Kullanıcının hesabını ve verilerini kalıcı olarak siler.
+      operationId: deleteAccount
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '204':
+          description: Hesap başarıyla silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/change-password:
+    put:
+      tags:
+        - users
+      summary: Şifre Değiştirme
+      description: Mevcut kullanıcının şifresini günceller.
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+      responses:
+        '200':
+          description: Şifre başarıyla değiştirildi
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/avatar:
+    post:
+      tags:
+        - users
+      summary: Profil Resmi Ekleme
+      description: Kullanıcının profil resmini sisteme yükler.
+      operationId: uploadAvatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Avatar yüklendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags:
+        - users
+      summary: Profil Resmi Güncelleme
+      description: Mevcut profil resmini değiştirir.
+      operationId: updateAvatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Avatar güncellendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      tags:
+        - users
+      summary: Profil Resmi Silme
+      description: Kullanıcının profil resmini kalıcı olarak siler.
+      operationId: deleteAvatar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '204':
+          description: Avatar silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}/groups:
+    get:
+      tags:
+        - users
+      summary: Kullanıcının Gruplarını Listeleme
+      description: Kullanıcının dahil olduğu veya yönettiği tüm grupları getirir.
+      operationId: getUserGroups
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups:
+    post:
+      tags:
+        - groups
+      summary: Grup Oluşturma
+      description: Yeni bir harcama veya etkinlik grubu oluşturur.
+      operationId: createGroup
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Grup oluşturuldu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}:
+    put:
+      tags:
+        - groups
+      summary: Grup Bilgilerini Güncelleme
+      description: Grup sahibinin grup bilgilerini değiştirmesini sağlar.
+      operationId: updateGroup
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdate'
+      responses:
+        '200':
+          description: Grup güncellendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags:
+        - groups
+      summary: Grup Silme
+      description: Grup sahibinin grubu kalıcı olarak silmesini sağlar.
+      operationId: deleteGroup
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      responses:
+        '204':
+          description: Grup silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /groups/{groupId}/members:
+    get:
+      tags:
+        - groups
+      summary: Grup Üyelerini Listeleme
+      description: Belirli bir gruptaki tüm üyeleri ve rollerini listeler.
+      operationId: getGroupMembers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags:
+        - groups
+      summary: Gruba Üye Ekleme
+      description: Mevcut bir gruba yeni kullanıcı ekler.
+      operationId: addGroupMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Üye eklendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/members/{userId}:
+    delete:
+      tags:
+        - groups
+      summary: Gruptan Üye Çıkarma
+      description: Kullanıcının gruptan çıkarılmasını veya ayrılmasını sağlar.
+      operationId: removeGroupMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '204':
+          description: Üye gruptan çıkarıldı
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/expenses:
+    post:
+      tags:
+        - expenses
+      summary: Manuel Gider Ekleme
+      description: İlgili gruba tutar, başlık ve tarih belirterek manuel harcama ekler.
+      operationId: createManualExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseCreate'
+      responses:
+        '201':
+          description: Gider başarıyla eklendi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/expenses/scan:
+    post:
+      tags:
+        - expenses
+        - ai
+      summary: AI Destekli Fiş Okuma ve Gider Ekleme
+      description: Yüklenen fiş görüntüsündeki verileri yapay zeka ile okuyup otomatik gider kaydı oluşturur.
+      operationId: scanReceiptAndCreateExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                receiptImage:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Fiş okundu ve gider oluşturuldu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}:
+    get:
+      tags:
+        - expenses
+      summary: Gider Detayını Görüntüleme
+      description: Bir giderin tüm detaylarını (ürünler, kimin ödediği vb.) getirir.
+      operationId: getExpenseDetails
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - expenses
+      summary: Gider Silme
+      description: Eklenen bir gideri kalıcı olarak siler.
+      operationId: deleteExpense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      responses:
+        '204':
+          description: Gider silindi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}/items:
+    post:
+      tags:
+        - expenses
+      summary: Gidere Ürün Ekleme
+      description: Oluşturulan gidere yeni ürün kalemleri ekler.
+      operationId: addExpenseItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseItemCreate'
+      responses:
+        '201':
+          description: Ürün eklendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}/items/{itemId}/split:
+    post:
+      tags:
+        - expenses
+      summary: Ürünü Kişilere Atama
+      description: Her ürün için hangi grup üyelerinin paylaşacağı belirlenir.
+      operationId: splitExpenseItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+        - $ref: '#/components/parameters/ItemIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignedUserIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Ürün başarıyla paylaştırıldı
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /expenses/{expenseId}/calculate:
+    get:
+      tags:
+        - expenses
+      summary: Otomatik Borç Hesaplama
+      description: Sistemin tüm ürünler girildikten sonra kimin ne kadar ödeyeceğini anlık hesaplamasını sağlar.
+      operationId: calculateDebts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ExpenseIdParam'
+      responses:
+        '200':
+          description: Hesaplama başarılı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DebtCalculation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ai/item-categorization:
+    post:
+      tags:
+        - ai
+      summary: Ürün Kategorilendirme & Otomatik Etiketleme
+      description: Fişlerdeki ürünleri (gıda, temizlik vb.) AI ile otomatik kategorilere ayırır.
+      operationId: categorizeItemWithAI
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                itemName:
+                  type: string
+                  example: "Sütaş Ayran 1L"
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    type: string
+                    example: "Gıda/İçecek"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ai/verify-price:
+    post:
+      tags:
+        - ai
+      summary: Anomali Tespiti & Fiyat Doğrulama
+      description: Girilen verilerdeki sıra dışı fiyatları (anomali) tespit eder.
+      operationId: verifyPriceWithAI
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                itemName:
+                  type: string
+                price:
+                  type: number
+                  format: float
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isAnomaly:
+                    type: boolean
+                  confidenceScore:
+                    type: number
+                    format: float
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token ile kimlik doğrulama
+
+  parameters:
+    UserIdParam:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    GroupIdParam:
+      name: groupId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ExpenseIdParam:
+      name: expenseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ItemIdParam:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        avatarUrl:
+          type: string
+          format: uri
+        createdAt:
+          type: string
+          format: date-time
+
+    UserRegistration:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    UserUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+
+    LoginCredentials:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    ChangePassword:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+
+    AuthToken:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        ownerId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    GroupCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    GroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    Expense:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        groupId:
+          type: string
+          format: uuid
+        paidById:
+          type: string
+          format: uuid
+        title:
+          type: string
+        totalAmount:
+          type: number
+          format: float
+        date:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpenseItem'
+
+    ExpenseCreate:
+      type: object
+      required:
+        - title
+        - totalAmount
+      properties:
+        title:
+          type: string
+        totalAmount:
+          type: number
+          format: float
+        date:
+          type: string
+          format: date-time
+
+    ExpenseItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+        category:
+          type: string
+
+    ExpenseItemCreate:
+      type: object
+      required:
+        - name
+        - price
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+
+    DebtCalculation:
+      type: object
+      properties:
+        debtorId:
+          type: string
+          format: uuid
+          description: Borçlu olan kişi
+        creditorId:
+          type: string
+          format: uuid
+          description: Alacaklı olan kişi
+        amount:
+          type: number
+          format: float
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Geçersiz istek
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Yetkisiz erişim veya geçersiz token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Kaynak bulunamadı
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Erişim reddedildi
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
