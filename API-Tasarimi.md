@@ -1,6 +1,6 @@
 # API Tasarımı
 
-**OpenAPI Spesifikasyon Dosyası:** [SiplitbroAPI.yaml](SplitbroAPI.yaml)
+**OpenAPI Spesifikasyon Dosyası:** [SplitbroAPI.yaml](SplitbroAPI.yaml)
 
 Bu doküman, OpenAPI Specification (OAS) 3.0 standardına göre hazırlanmış bir API tasarımını içermektedir.
 
