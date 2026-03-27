@@ -8,15 +8,13 @@ const errorHandler = (err, req, res, next) => {
 
   res.locals.errorMessage = err.message;
 
+  console.error("HATA YAKALANDI:", err);
+
   const response = {
     code: statusCode,
     message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'development\r' ? { stack: err.stack } : {}),
   };
-
-  if (process.env.NODE_ENV === 'development') {
-    console.error(err);
-  }
 
   res.status(statusCode).send(response);
 };

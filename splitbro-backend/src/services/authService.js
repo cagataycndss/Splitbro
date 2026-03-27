@@ -26,6 +26,7 @@ export const registerUser = async (userData) => {
   return {
     _id: user._id,
     email: user.email,
+    token: generateToken(user._id),
   };
 };
 

@@ -2,7 +2,7 @@ import Group from '../models/Group.js';
 import Expense from '../models/Expense.js';
 import User from '../models/User.js';
 import { scanReceiptMockAI } from './aiScannerService.js';
-import AppError from '../utils/AppError.js';
+import ApiError from '../utils/ApiError.js';
 
 export const createGroupService = async (groupData) => {
   // Yeni grubu, req.user._id referansıyla (sahibi olarak) db'ye kaydet
@@ -35,17 +35,17 @@ export const deleteGroupService = async (group) => {
 
 export const addMemberService = async (groupId, newMemberId, role = 'member') => {
   const group = await Group.findById(groupId);
-  if (!group) throw new AppError('Grup bulunamadı', 404);
+  if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   // Zaten üye mi kontrol et
   const isDuplicate = group.members.some(
     (member) => member.user.toString() === newMemberId.toString()
   );
-  if (isDuplicate) throw new AppError('Bu kullanıcı zaten grupta üye.', 400);
+  if (isDuplicate) throw new ApiError(400, 'Bu kullanıcı zaten grupta üye.');
 
   // Kullanıcı db'de gerçekten var mı?
   const isUserExist = await User.findById(newMemberId);
-  if(!isUserExist) throw new AppError('Eklenecek kullanıcı sistemde bulunamadı.', 404);
+  if(!isUserExist) throw new ApiError(404, 'Eklenecek kullanıcı sistemde bulunamadı.');
 
   group.members.push({ user: newMemberId, role });
   await group.save();
@@ -56,14 +56,14 @@ export const addMemberService = async (groupId, newMemberId, role = 'member') =>
 export const getMembersService = async (groupId) => {
   // Uyelerin ObjectId lerini asil bilgilerine populate et, ancak sifreleri getirme.
   const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
-  if (!group) throw new AppError('Grup bulunamadı', 404);
+  if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   return group.members;
 };
 
 export const removeMemberService = async (groupId, memberIdToRemove, requesterId) => {
   const group = await Group.findById(groupId);
-  if (!group) throw new AppError('Grup bulunamadı', 404);
+  if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   // Yetki Kontrolü: 
   // İstekte bulunan kişi (requesterId), ya grubun sahibi (owner) olmalı
@@ -72,12 +72,12 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
   const isSelfLeaving = memberIdToRemove.toString() === requesterId.toString();
 
   if (!isOwner && !isSelfLeaving) {
-    throw new AppError('Bu işlem için sadece Grup Sahibi yetkilidir veya yalnızca kendi isteğinizle gruptan ayrılabilirsiniz (403).', 403);
+    throw new ApiError(403, 'Bu işlem için sadece Grup Sahibi yetkilidir veya yalnızca kendi isteğinizle gruptan ayrılabilirsiniz (403).');
   }
 
   // Sahibin kendini gruptan atmasını önleyelim
   if (group.owner.toString() === memberIdToRemove.toString()) {
-    throw new AppError('Grup sahibi gruptan çıkartılamaz! Önce yetki devri yapılmalıdır (400).', 400);
+    throw new ApiError(400, 'Grup sahibi gruptan çıkartılamaz! Önce yetki devri yapılmalıdır (400).');
   }
 
   const initialMemberCount = group.members.length;
@@ -87,7 +87,7 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
   );
 
   if (group.members.length === initialMemberCount) {
-    throw new AppError('Kullanıcı zaten grupta yok veya çıkartılamadı!', 400); // 400 Geçersiz Veri Durumu
+    throw new ApiError(400, 'Kullanıcı zaten grupta yok veya çıkartılamadı!'); // 400 Geçersiz Veri Durumu
   }
 
   await group.save();
@@ -96,13 +96,13 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
 
 export const createExpenseViaAIScannerService = async (groupId, paidById, imageUrl) => {
   const group = await Group.findById(groupId);
-  if (!group) throw new AppError('Grup bulunamadı! İşlem iptal edildi.', 404);
+  if (!group) throw new ApiError(404, 'Grup bulunamadı! İşlem iptal edildi.');
 
   // Mock AI Servisini Çağırıyoruz
   const aiResult = await scanReceiptMockAI(imageUrl);
 
   if(!aiResult.success) {
-    throw new AppError('Fiş/Fatura okunurken bir hata oluştu.', 500);
+    throw new ApiError(500, 'Fiş/Fatura okunurken bir hata oluştu.');
   }
 
   // Okunan OCR sonuçları üzerinden Expense modelinden Gider kaydı yaratıyoruz
