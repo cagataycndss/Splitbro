@@ -27,7 +27,7 @@ export const updateGroupService = async (group, updateData) => {
 
 export const deleteGroupService = async (group) => {
   // Gruba bağlı Expense'leri de silmeliyiz (Cascade Delete)
-  await Expense.deleteMany({ group: group._id });
+  await Expense.deleteMany({ groupId: group._id });
   
   // Grubu tamamen kaldır
   await Group.findByIdAndDelete(group._id);
@@ -110,9 +110,9 @@ export const createExpenseViaAIScannerService = async (groupId, paidById, imageU
 
   const newExpense = await Expense.create({
     title,
-    amount,
-    paidBy: paidById,
-    group: groupId,
+    totalAmount: amount,
+    paidById: paidById,
+    groupId: groupId,
     receiptData: {
       imageUrl,
       confidenceScore,

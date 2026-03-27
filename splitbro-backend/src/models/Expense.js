@@ -7,21 +7,28 @@ const expenseSchema = new mongoose.Schema(
       required: [true, 'Giderin kısaca sebebi (başlığı) girilmelidir!'],
       trim: true,
     },
-    amount: {
+    totalAmount: {
       type: Number,
-      required: [true, 'Gider için bir miktar (amount) belirtilmelidir!'],
-      min: [0, 'Tutar 0\\'dan büyük olmalı!'],
+      required: [true, 'Gider için bir miktar (totalAmount) belirtilmelidir!'],
+      min: [0, "Tutar 0'dan büyük olmalı!"],
     },
-    paidBy: {
+    paidById: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'Ödemeyi yapan kişi belirtilmelidir!'],
     },
-    group: {
+    groupId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Group',
       required: [true, 'Giderin ait olduğu bir grup olmalıdır!'],
     },
+    items: [
+      {
+        name: String,
+        price: Number,
+        category: String
+      }
+    ],
     receiptData: {
       // AI'dan dönen analiz sonuçlarını veya fotoğraf URL'sini saklayacağımız bölüm
       imageUrl: String,
