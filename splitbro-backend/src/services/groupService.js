@@ -55,7 +55,7 @@ export const addMemberService = async (groupId, newMemberId, role = 'member') =>
 
 export const getMembersService = async (groupId) => {
   // Uyelerin ObjectId lerini asil bilgilerine populate et, ancak sifreleri getirme.
-  const group = await Group.findById(groupId).populate('members.user', 'name email');
+  const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
   if (!group) throw new AppError('Grup bulunamadı', 404);
 
   return group.members;

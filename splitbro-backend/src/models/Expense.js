@@ -1,5 +1,12 @@
 import mongoose from 'mongoose';
 
+const expenseItemSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  category: { type: String, default: 'Uncategorized' },
+  assignedUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] 
+});
+
 const expenseSchema = new mongoose.Schema(
   {
     title: {
@@ -22,13 +29,7 @@ const expenseSchema = new mongoose.Schema(
       ref: 'Group',
       required: [true, 'Giderin ait olduğu bir grup olmalıdır!'],
     },
-    items: [
-      {
-        name: String,
-        price: Number,
-        category: String
-      }
-    ],
+    items: [expenseItemSchema],
     receiptData: {
       // AI'dan dönen analiz sonuçlarını veya fotoğraf URL'sini saklayacağımız bölüm
       imageUrl: String,

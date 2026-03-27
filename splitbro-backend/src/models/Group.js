@@ -39,12 +39,5 @@ const groupSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Virtual alanlarla harcamaları vb. alabiliriz
-// groupSchema.virtual('expenses', {
-//   ref: 'Expense',
-//   foreignField: 'group',
-//   localField: '_id'
-// });
-
 const Group = mongoose.model('Group', groupSchema);
 export default Group;
