@@ -26,4 +26,3 @@ export const deleteUserAvatar = catchAsync(async (req, res) => {
   res.status(200).json(result);
 });
 
-

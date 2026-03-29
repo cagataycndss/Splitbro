@@ -4,7 +4,6 @@ import * as expenseService from '../services/expenseService.js';
 
 export const createManualExpense = catchAsync(async (req, res) => {
     const { groupId } = req.params;
-    // Eğer frontend'den "kim ödedi" bilgisi geldiyse onu kullan, yoksa giriş yapan kullanıcı
     const paidById = req.body.paidById || req.user._id;
 
     const newExpense = await expenseService.createManualExpenseService(groupId, paidById, req.body);
@@ -20,11 +19,11 @@ export const getExpenseDetails = catchAsync(async (req, res) => {
     const expense = await Expense.findById(req.params.expenseId)
         .populate('items.assignedUserIds', 'firstName lastName avatar')
         .populate('paidById', 'firstName lastName avatar');
-    
+
     if (!expense) {
         return res.status(404).json({ message: "Gider bulunamadı" });
     }
-    
+
     res.status(200).json({ status: 'success', data: expense });
 });
 
