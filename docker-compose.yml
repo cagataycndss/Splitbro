@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6-jammy
+    container_name: splitbro_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./splitbro-backend
+    container_name: splitbro_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/splitbro
+    env_file:
+      - ./splitbro-backend/.env
+    depends_on:
+      - mongodb
+
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./splitbro-frontend
+    container_name: splitbro_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
