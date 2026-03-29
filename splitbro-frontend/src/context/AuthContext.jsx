@@ -10,21 +10,19 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Uygulama yüklendiğinde token'ı kontrol et
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
         const decoded = jwtDecode(token);
         
-        // Token süresi dolmuş mu kontrolü
         const currentTime = Date.now() / 1000;
         if (decoded.exp < currentTime) {
           logout();
         } else {
           setUser(decoded);
-          // fetch current profile data to be safe:
-          api.get('/users/profile').then(res => {
+          const myId = decoded.id || decoded._id;
+          api.get(`/users/${myId}/profile`).then(res => {
             if(res.data?.data) {
                 setUser({...decoded, ...res.data.data});
             }
@@ -41,7 +39,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      // Backend: /api/auth/login -> { token: ..., status: "success" }
       const response = await api.post('/auth/login', { email, password });
       const token = response.data.token || response.data.data?.token;
       
@@ -59,7 +56,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (firstName, lastName, email, password) => {
     try {
-      // Backend: /api/auth/register
       const response = await api.post('/auth/register', { 
         firstName, lastName, email, password 
       });

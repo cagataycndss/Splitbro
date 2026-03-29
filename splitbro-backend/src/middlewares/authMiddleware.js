@@ -26,32 +26,25 @@ export const protect = catchAsync(async (req, res, next) => {
   next();
 });
 
-// Alias for groupRoutes compatibility
 export const protectUser = protect;
 
-/**
- * 2. Grubun Sahibi (Owner) mi Kontrolü
- * Sadece silme, bilgilerini düzenleme veya üye çıkartma gibi işlemler için
- */
+
 export const restrictToGroupOwner = async (req, res, next) => {
   try {
     const groupId = req.params.groupId;
     
-    // Grubu Database'den bul
     const group = await Group.findById(groupId);
 
     if (!group) {
       return next(new ApiError(404, 'Belirtilen ID ile eşleşen bir grup bulunamadı'));
     }
 
-    // Group Owner ID ile giriş yapmış User ID aynı mı?
     if (group.owner.toString() !== req.user._id.toString()) {
       return next(
         new ApiError(403, 'Bu işlemi yapmak için Grubun Kurucusu/Sahibi (Owner) olmalısınız!')
       );
     }
 
-    // Controller katmanında gruba tekrar DB isteği atmamak için group objesini iletiyoruz
     req.group = group; 
     next();
   } catch (err) {

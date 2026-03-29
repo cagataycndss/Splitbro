@@ -1,11 +1,10 @@
 import Group from '../models/Group.js';
 import Expense from '../models/Expense.js';
 import User from '../models/User.js';
-import { scanReceiptMockAI } from './aiScannerService.js';
+import { scanReceiptWithAI } from './aiScannerService.js';
 import ApiError from '../utils/ApiError.js';
 
 export const createGroupService = async (groupData) => {
-  // Yeni grubu, req.user._id referansıyla (sahibi olarak) db'ye kaydet
   const newGroup = await Group.create({
     name: groupData.name,
     description: groupData.description,
@@ -17,7 +16,6 @@ export const createGroupService = async (groupData) => {
 };
 
 export const updateGroupService = async (group, updateData) => {
-  // Req üzerindeki pre-fetched grubu alıp basitçe güncelliyoruz.
   if (updateData.name) group.name = updateData.name;
   if (updateData.description) group.description = updateData.description;
 
@@ -26,26 +24,31 @@ export const updateGroupService = async (group, updateData) => {
 };
 
 export const deleteGroupService = async (group) => {
-  // Gruba bağlı Expense'leri de silmeliyiz (Cascade Delete)
   await Expense.deleteMany({ groupId: group._id });
   
-  // Grubu tamamen kaldır
   await Group.findByIdAndDelete(group._id);
 };
 
-export const addMemberService = async (groupId, newMemberId, role = 'member') => {
+export const addMemberService = async (groupId, email, requesterId, role = 'member') => {
   const group = await Group.findById(groupId);
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
-  // Zaten üye mi kontrol et
+  const isRequesterMember = group.members.some(
+    (member) => member.user.toString() === requesterId.toString()
+  );
+  if (!isRequesterMember) {
+    throw new ApiError(403, 'Gruba üye eklemek için yetkiniz yok (Grup üyesi değilsiniz).');
+  }
+
+  const isUserExist = await User.findOne({ email });
+  if(!isUserExist) throw new ApiError(404, 'Eklenecek e-posta adresine sahip bir kullanıcı sistemde bulunamadı.');
+  
+  const newMemberId = isUserExist._id;
+
   const isDuplicate = group.members.some(
     (member) => member.user.toString() === newMemberId.toString()
   );
   if (isDuplicate) throw new ApiError(400, 'Bu kullanıcı zaten grupta üye.');
-
-  // Kullanıcı db'de gerçekten var mı?
-  const isUserExist = await User.findById(newMemberId);
-  if(!isUserExist) throw new ApiError(404, 'Eklenecek kullanıcı sistemde bulunamadı.');
 
   group.members.push({ user: newMemberId, role });
   await group.save();
@@ -53,10 +56,17 @@ export const addMemberService = async (groupId, newMemberId, role = 'member') =>
   return group;
 };
 
-export const getMembersService = async (groupId) => {
-  // Uyelerin ObjectId lerini asil bilgilerine populate et, ancak sifreleri getirme.
+export const getMembersService = async (groupId, requesterId) => {
   const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
+
+  const isRequesterMember = group.members.some(
+    (member) => member.user._id.toString() === requesterId.toString()
+  );
+  
+  if (!isRequesterMember) {
+    throw new ApiError(403, 'Grup üyelerini görüntüleme yetkisine sahip değilsiniz.');
+  }
 
   return group.members;
 };
@@ -65,9 +75,6 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
   const group = await Group.findById(groupId);
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
-  // Yetki Kontrolü: 
-  // İstekte bulunan kişi (requesterId), ya grubun sahibi (owner) olmalı
-  // ya da gruptan çıkartılacak olan kişi ile birebir aynı kişi olmalı (Kendi isteğiyle ayrılma durumu)
   const isOwner = group.owner.toString() === requesterId.toString();
   const isSelfLeaving = memberIdToRemove.toString() === requesterId.toString();
 
@@ -75,19 +82,17 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
     throw new ApiError(403, 'Bu işlem için sadece Grup Sahibi yetkilidir veya yalnızca kendi isteğinizle gruptan ayrılabilirsiniz (403).');
   }
 
-  // Sahibin kendini gruptan atmasını önleyelim
   if (group.owner.toString() === memberIdToRemove.toString()) {
     throw new ApiError(400, 'Grup sahibi gruptan çıkartılamaz! Önce yetki devri yapılmalıdır (400).');
   }
 
   const initialMemberCount = group.members.length;
-  // Belirtilen üyeyi members dizisinden filtreliyoruz
   group.members = group.members.filter(
     (member) => member.user.toString() !== memberIdToRemove.toString()
   );
 
   if (group.members.length === initialMemberCount) {
-    throw new ApiError(400, 'Kullanıcı zaten grupta yok veya çıkartılamadı!'); // 400 Geçersiz Veri Durumu
+    throw new ApiError(400, 'Kullanıcı zaten grupta yok veya çıkartılamadı!'); 
   }
 
   await group.save();
@@ -98,14 +103,12 @@ export const createExpenseViaAIScannerService = async (groupId, paidById, imageU
   const group = await Group.findById(groupId);
   if (!group) throw new ApiError(404, 'Grup bulunamadı! İşlem iptal edildi.');
 
-  // Mock AI Servisini Çağırıyoruz
-  const aiResult = await scanReceiptMockAI(imageUrl);
+  const aiResult = await scanReceiptWithAI(imageUrl);
 
   if(!aiResult.success) {
     throw new ApiError(500, 'Fiş/Fatura okunurken bir hata oluştu.');
   }
 
-  // Okunan OCR sonuçları üzerinden Expense modelinden Gider kaydı yaratıyoruz
   const { title, amount, confidenceScore, ocrText } = aiResult.extractedData;
 
   const newExpense = await Expense.create({
@@ -121,4 +124,113 @@ export const createExpenseViaAIScannerService = async (groupId, paidById, imageU
   });
 
   return newExpense;
+};
+
+export const getGroupDetailsService = async (groupId, requesterId) => {
+  const group = await Group.findById(groupId).populate('members.user', 'firstName lastName avatar email');
+  if (!group) throw new ApiError(404, 'Grup bulunamadı');
+
+  const isRequesterMember = group.members.some(
+    (member) => member.user._id.toString() === requesterId.toString()
+  );
+  if (!isRequesterMember) {
+    throw new ApiError(403, 'Bu grubun detaylarını görüntüleme yetkisine sahip değilsiniz.');
+  }
+
+  const expenses = await Expense.find({ groupId: group._id })
+      .populate('paidById', 'firstName lastName avatar')
+      .populate('items.assignedUserIds', 'firstName lastName avatar')
+      .sort({ createdAt: -1 });
+
+  return {
+    group,
+    expenses
+  };
+};
+
+export const calculateGroupDebtsService = async (groupId) => {
+  const group = await Group.findById(groupId);
+  if (!group) throw new ApiError(404, 'Grup bulunamadı');
+
+  const expenses = await Expense.find({ groupId });
+  const debtMap = new Map(); 
+
+  expenses.forEach(expense => {
+      const creditorId = expense.paidById.toString();
+      
+      expense.items.forEach(item => {
+          const usersCount = item.assignedUserIds.length;
+          if (usersCount === 0) return;
+          const splitAmount = item.price / usersCount;
+          
+          item.assignedUserIds.forEach(userIdObj => {
+              const debtorId = userIdObj.toString();
+              if (debtorId === creditorId) return;
+
+              const cBal = debtMap.get(creditorId) || 0;
+              debtMap.set(creditorId, cBal + splitAmount);
+
+              const dBal = debtMap.get(debtorId) || 0;
+              debtMap.set(debtorId, dBal - splitAmount);
+          });
+      });
+  });
+
+  let debtors = []; 
+  let creditors = []; 
+  
+  debtMap.forEach((balance, userId) => {
+      if (balance > 0.01) creditors.push({ userId, balance });
+      else if (balance < -0.01) debtors.push({ userId, balance: Math.abs(balance) });
+  });
+
+  debtors.sort((a,b) => b.balance - a.balance);
+  creditors.sort((a,b) => b.balance - a.balance);
+
+  const settlements = [];
+  let d = 0;
+  let c = 0;
+
+  while(d < debtors.length && c < creditors.length) {
+      const debtor = debtors[d];
+      const creditor = creditors[c];
+      
+      const minAmount = Math.min(debtor.balance, creditor.balance);
+      
+      settlements.push({
+          from: debtor.userId,
+          to: creditor.userId,
+          amount: parseFloat(minAmount.toFixed(2))
+      });
+      
+      debtor.balance -= minAmount;
+      creditor.balance -= minAmount;
+      
+      if (debtor.balance < 0.01) d++;
+      if (creditor.balance < 0.01) c++;
+  }
+
+  return settlements;
+};
+
+
+export const settleDebtService = async (groupId, paidBy, paidTo, amount) => {
+  const group = await Group.findById(groupId);
+  if (!group) throw new ApiError(404, 'Grup bulunamadı');
+
+  const settlementExpense = await Expense.create({
+    title: `💳 Ödeme Yapıldı`,
+    totalAmount: amount,
+    paidById: paidBy,
+    groupId: groupId,
+    isSettlement: true,
+    items: [{
+      name: 'Borç Ödemesi',
+      price: amount,
+      category: 'Ödeme',
+      assignedUserIds: [paidTo]
+    }]
+  });
+
+  return settlementExpense;
 };

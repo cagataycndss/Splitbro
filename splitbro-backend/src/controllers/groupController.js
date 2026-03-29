@@ -6,12 +6,7 @@ const catchAsync = (fn) => {
   };
 };
 
-/**
- * 1. Grup Bilgilerini Güncelleme
- * PUT /groups/{groupId}
- */
 export const updateGroup = catchAsync(async (req, res, next) => {
-  // restrictToGroupOwner yapısı bize group'u req içerisine set ediyor.
   const updatedGroup = await groupService.updateGroupService(req.group, req.body);
 
   res.status(200).json({
@@ -22,23 +17,7 @@ export const updateGroup = catchAsync(async (req, res, next) => {
   });
 });
 
-/**
- * 2. Grup Silme
- * DELETE /groups/{groupId}
- */
-export const deleteGroup = catchAsync(async (req, res, next) => {
-  await groupService.deleteGroupService(req.group);
 
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
-
-/**
- * 3. Grup Oluşturma
- * POST /groups
- */
 export const createGroup = catchAsync(async (req, res, next) => {
   const { name, description } = req.body;
   const ownerId = req.user._id;
@@ -53,15 +32,12 @@ export const createGroup = catchAsync(async (req, res, next) => {
   });
 });
 
-/**
- * 4. Gruba Üye Ekleme
- * POST /groups/{groupId}/members
- */
 export const addMember = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
-  const { userId, role } = req.body; // post body içerisinden gelen veriler
+  const { email, role } = req.body; 
+  const requesterId = req.user._id;
 
-  const updatedGroup = await groupService.addMemberService(groupId, userId, role);
+  const updatedGroup = await groupService.addMemberService(groupId, email, requesterId, role);
 
   res.status(200).json({
     status: 'success',
@@ -72,14 +48,12 @@ export const addMember = catchAsync(async (req, res, next) => {
   });
 });
 
-/**
- * 5. Grup Üyelerini Listeleme
- * GET /groups/{groupId}/members
- */
+
 export const getMembers = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
+  const requesterId = req.user._id;
   
-  const members = await groupService.getMembersService(groupId);
+  const members = await groupService.getMembersService(groupId, requesterId);
 
   res.status(200).json({
     status: 'success',
@@ -90,10 +64,7 @@ export const getMembers = catchAsync(async (req, res, next) => {
   });
 });
 
-/**
- * 6. Gruptan Üye Çıkarma
- * DELETE /groups/{groupId}/members/{userId}
- */
+
 export const removeMember = catchAsync(async (req, res, next) => {
   const { groupId, userId } = req.params;
   const currentUserId = req.user._id;
@@ -106,14 +77,20 @@ export const removeMember = catchAsync(async (req, res, next) => {
   });
 });
 
-/**
- * 7. Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme
- * POST /groups/{groupId}/expenses/scan
- */
+
 export const scanAndAddExpense = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
-  const { imageUrl } = req.body;
   const paidById = req.user._id; 
+
+  let imageUrl;
+  if (req.file) {
+    const base64Image = req.file.buffer.toString('base64');
+    imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+  } else if (req.body.imageUrl) {
+    imageUrl = req.body.imageUrl;
+  } else {
+    return res.status(400).json({ message: 'Lütfen bir fiş/fatura resmi yükleyin veya URL girin.' });
+  }
 
   const expense = await groupService.createExpenseViaAIScannerService(groupId, paidById, imageUrl);
 
@@ -123,5 +100,38 @@ export const scanAndAddExpense = catchAsync(async (req, res, next) => {
     data: {
       expense,
     },
+  });
+});
+
+
+export const getGroupDetails = catchAsync(async (req, res, next) => {
+  const { groupId } = req.params;
+  const requesterId = req.user._id;
+
+  const groupDetails = await groupService.getGroupDetailsService(groupId, requesterId);
+
+  res.status(200).json({
+    status: 'success',
+    data: groupDetails
+  });
+});
+
+export const calculateGroupDebts = catchAsync(async (req, res, next) => {
+  const { groupId } = req.params;
+  const settlements = await groupService.calculateGroupDebtsService(groupId);
+  res.status(200).json({ status: 'success', data: settlements });
+});
+
+
+export const settleDebt = catchAsync(async (req, res, next) => {
+  const { groupId } = req.params;
+  const { paidBy, paidTo, amount } = req.body;
+
+  const settlement = await groupService.settleDebtService(groupId, paidBy, paidTo, amount);
+
+  res.status(201).json({
+    status: 'success',
+    message: 'Borç başarıyla kapatıldı! Hesaplaşma güncellendi.',
+    data: settlement
   });
 });

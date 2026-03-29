@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import Header from '../components/Header';
+import { useAuth } from '../context/AuthContext';
 import { PlusCircle, Users, Activity } from 'lucide-react';
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -12,20 +14,19 @@ const Dashboard = () => {
   const [newGroupDesc, setNewGroupDesc] = useState('');
 
   const fetchGroups = async () => {
+    if (!user || (!user.id && !user._id)) return;
+    const userId = user.id || user._id;
     try {
-      // Backend: GET /api/v1/groups?
-      // Since our route points don't have a GetAll logic directly in REST-API.md
-      // We assume /api/groups gets user's groups. Let's make an axios call.
-      const res = await api.get('/groups');
+      const res = await api.get(`/users/${userId}/groups`);
       if (res.data?.data?.groups) {
          setGroups(res.data.data.groups);
+      } else if (res.data?.data) {
+         setGroups(res.data.data);
       } else if (Array.isArray(res.data)) {
          setGroups(res.data);
       }
     } catch (err) {
       console.error('Gruplar çekilemedi:', err);
-      // Backend /api/groups Endpoint'i yoksa mock gosterelim
-      if(groups.length === 0) setGroups(mockGroups);
     } finally {
       setLoading(false);
     }
@@ -33,7 +34,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchGroups();
-  }, []);
+  }, [user]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -45,7 +46,7 @@ const Dashboard = () => {
       setShowModal(false);
       setNewGroupName('');
       setNewGroupDesc('');
-      fetchGroups(); // Refresh
+      fetchGroups(); 
     } catch (err) {
       alert("Grup oluşturulurken hata oluştu. " + (err.response?.data?.message || ''));
     }
@@ -88,7 +89,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       
-                      <p style={{ flex: 1, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                      <p style={{ flex: 1, fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
                         {group.description || 'Grup açıklaması bulunmamaktadır.'}
                       </p>
 
@@ -131,11 +132,5 @@ const Dashboard = () => {
     </>
   );
 };
-
-// Fallback if backend API is strictly adhering to existing routes
-const mockGroups = [
-  { _id: '1', name: 'Antalya Tatili 🏖️', description: 'Yaz tatili bütçesi ve ortak masrafları', members: [{}, {}] },
-  { _id: '2', name: 'Ev Masrafları 🏠', description: 'Faturalar, mutfak masrafları ve aidat', members: [{}, {}, {}] }
-];
 
 export default Dashboard;

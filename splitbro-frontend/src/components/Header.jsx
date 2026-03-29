@@ -33,10 +33,10 @@ const Header = () => {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+        <Link to="/profile" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', textDecoration: 'none' }} title="Profil Ayarları">
           <User size={18} />
-          <span>{user?.firstName ? `${user.firstName} ${user.lastName}` : user?.name || user?.email}</span>
-        </div>
+          <span style={{ fontWeight: '500' }}>{user?.firstName ? `${user.firstName} ${user.lastName}` : user?.email}</span>
+        </Link>
         <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.875rem' }}>
           <LogOut size={16} />
           Çıkış

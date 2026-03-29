@@ -31,9 +31,8 @@ const expenseSchema = new mongoose.Schema(
     },
     items: [expenseItemSchema],
     receiptData: {
-      // AI'dan dönen analiz sonuçlarını veya fotoğraf URL'sini saklayacağımız bölüm
       imageUrl: String,
-      confidenceScore: Number, // AI'nin faturayı okuma doğruluk oranı
+      confidenceScore: Number, 
       ocrText: String,     
     },
     date: {

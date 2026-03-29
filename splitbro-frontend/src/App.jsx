@@ -4,8 +4,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import GroupDetail from './pages/GroupDetail';
+import ExpenseDetail from './pages/ExpenseDetail';
+import Profile from './pages/Profile';
 
-// Korunan Route bileşeni
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
@@ -20,7 +21,6 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Açık Route bileşeni (Giriş yaptıysa Login'i görmesin)
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -37,6 +37,8 @@ function App() {
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/groups/:groupId" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
+          <Route path="/expenses/:expenseId" element={<ProtectedRoute><ExpenseDetail /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Router>

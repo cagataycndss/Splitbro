@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Backend server url. Development: localhost:5000
 const API_URL = 'http://localhost:5000/api';
 
 const api = axios.create({
@@ -10,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Add Authorization header automatically if token exists
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
