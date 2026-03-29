@@ -13,7 +13,11 @@ router.use(authMiddleware.protectUser);
 
 router.post('/', validate(createGroupSchema), groupController.createGroup);
 
-
+router
+  .route('/:groupId')
+  .get(groupController.getGroupDetails)
+  .put(authMiddleware.restrictToGroupOwner, validate(updateGroupSchema), groupController.updateGroup)  
+  .delete(authMiddleware.restrictToGroupOwner, groupController.deleteGroup); 
 
 router
   .route('/:groupId/members')

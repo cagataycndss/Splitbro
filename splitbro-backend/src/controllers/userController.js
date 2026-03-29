@@ -20,4 +20,9 @@ export const updateProfile = catchAsync(async (req, res) => {
   res.status(200).json({ message: 'Profil başarıyla güncellendi', data: result });
 });
 
+export const deleteUserAvatar = catchAsync(async (req, res) => {
+  if (req.params.userId !== req.user.id) return res.status(403).json({ message: 'Yetkisiz işlem' });
+  const result = await userService.deleteAvatar(req.params.userId);
+  res.status(200).json(result);
+});
 

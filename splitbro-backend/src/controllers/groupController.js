@@ -48,6 +48,15 @@ export const addMember = catchAsync(async (req, res, next) => {
   });
 });
 
+export const deleteGroup = catchAsync(async (req, res, next) => {
+  await groupService.deleteGroupService(req.group);
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
 
 export const getMembers = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
