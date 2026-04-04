@@ -1,10 +1,9 @@
-# Web Frontend Görev Dağılımı
-
-**Web Frontend Adresi:** [splitbro-frontend.vercel.app](https://splitbro-frontend.vercel.app)
+# Çağatay Candaş'ın Web Frontend Görevleri
+**Front-end Test Videosu:** [Test Videosu](https://youtu.be/o_-6tU7OS4c)
 
 ---
 
-## 1. Grup Bilgilerini Güncelleme (Çağatay Candaş)
+## 1. Grup Bilgilerini Güncelleme
 - **API Endpoint:** `PUT /groups/{groupId}`
 - **Görev:** Grup sahibinin grup adını ve açıklamasını güncelleyebileceği arayüz tasarımı ve implementasyonu.
 - **UI Bileşenleri:**
@@ -25,7 +24,7 @@
   - State Management: Form state ve dirty state kontrolü
   - API call için Axios/Fetch entegrasyonu
 
-## 2. Grup Silme (Çağatay Candaş)
+## 2. Grup Silme
 - **API Endpoint:** `DELETE /groups/{groupId}`
 - **Görev:** Grubun kalıcı olarak silinmesi için güvenli kullanıcı akışı tasarımı.
 - **UI Bileşenleri:**
@@ -40,7 +39,7 @@
   - Modal state yönetimi (isOpen, onClose)
   - Routing ve History tabanlı yönlendirme
 
-## 3. Gidere Ürün Ekleme (Çağatay Candaş)
+## 3. Gidere Ürün Ekleme
 - **API Endpoint:** `POST /expenses/{expenseId}/items`
 - **Görev:** Bir harcama detayında, fişe ait yeni ürün kalemlerinin manuel olarak eklenmesi arayüzü.
 - **UI Bileşenleri:**
@@ -58,7 +57,7 @@
   - Input masking (Fiyat için para birimi formatı)
   - Liste state'inin güncellenmesi (Re-render optimizasyonu)
 
-## 4. Ürünü Kişilere Atama (Çağatay Candaş)
+## 4. Ürünü Kişilere Atama
 - **API Endpoint:** `POST /expenses/{expenseId}/items/{itemId}/split`
 - **Görev:** Eklenen ürünleri, ödemeye katılacak grup üyelerine atama arayüzü.
 - **UI Bileşenleri:**
@@ -74,7 +73,7 @@
   - Array state yönetimi (Seçilen kullanıcı ID'lerinin tutulması)
   - Veritabanına UUID formatında ID'lerin gönderilmesi
 
-## 5. Otomatik Borç Hesaplama (Çağatay Candaş)
+## 5. Otomatik Borç Hesaplama
 - **API Endpoint:** `GET /expenses/{expenseId}/calculate`
 - **Görev:** Harcama paylaşımları girildikten sonra borç dağılımının hesaplanıp listelenmesi.
 - **UI Bileşenleri:**
@@ -88,7 +87,7 @@
   - Gelen JSON verisindeki amount, debtorId ve creditorId eşleştirmeleri
   - Liste render edilirken benzersiz key'lerin kullanılması
 
-## 6. Gider Detayını Görüntüleme (Çağatay Candaş)
+## 6. Gider Detayını Görüntüleme
 - **API Endpoint:** `GET /expenses/{expenseId}`
 - **Görev:** Bir gidere ait başlık, tarih, toplam tutar ve alt kalemlerin (ürünlerin) sergilendiği sayfa.
 - **UI Bileşenleri:**
@@ -103,7 +102,7 @@
   - Component Lifecycle / `useEffect` içinde API çağrısı
   - Gelen karmaşık JSON datasının UI componentlerine parse edilmesi
 
-## 7. Gider Silme (Çağatay Candaş)
+## 7. Gider Silme
 - **API Endpoint:** `DELETE /expenses/{expenseId}`
 - **Görev:** Eklenen bir giderin sayfadan tamamen silinmesi işlemi.
 - **UI Bileşenleri:**
@@ -116,7 +115,7 @@
 - **Teknik Detaylar:**
   - API yanıtı (204 No Content) sonrası client-side state'in temizlenmesi
 
-## 8. Profil Resmi Silme (Çağatay Candaş)
+## 8. Profil Resmi Silme
 - **API Endpoint:** `DELETE /users/{userId}/avatar`
 - **Görev:** Kullanıcının mevcut profil resmini kaldırıp varsayılan avatara dönme işlemi.
 - **UI Bileşenleri:**
@@ -127,7 +126,7 @@
   - Image source (`src`) değerinin statik bir fallback görsele çekilmesi
   - Hata durumunda eski resme geri dönme (Rollback)
 
-## 9. AI – Ürün Kategorilendirme & Otomatik Etiketleme (Çağatay Candaş)
+## 9. AI – Ürün Kategorilendirme & Otomatik Etiketleme
 - **API Endpoint:** `POST /ai/item-categorization`
 - **Görev:** Girilen fiş/ürün kalemlerinin yapay zeka tarafından kategorize edilip UI'da gösterilmesi.
 - **UI Bileşenleri:**
@@ -141,11 +140,3 @@
 - **Teknik Detaylar:**
   - API'ye Array (`itemsList`) tipinde veri gönderimi
   - Dönen dinamik kategori isimlerine göre UI'da dinamik renk atamaları
----
-
-## Grup Üyelerinin Web Frontend Görevleri
-
-1. [Çağatay Candaş'ın Web Frontend Görevleri](Cagatay-Candas/Cagatay-Candas-Web-Frontend-Gorevleri.md)
-2. [Furkan Kasalak'ın Web Frontend Görevleri](Furkan-Kasalak/Furkan-Kasalak-Web-Frontend-Gorevleri.md)
-3. [Gökdeniz Erten'in Web Frontend Görevleri](Gokdeniz-Erten/Gokdeniz-Erten-Web-Frontend-Gorevleri.md)
-
