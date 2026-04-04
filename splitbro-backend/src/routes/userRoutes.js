@@ -17,14 +17,16 @@ const router = express.Router();
 
 router.use(protect);
 
-
+router.get('/:userId/profile', getProfile);
 router.put('/:userId', validate(updateProfileSchema), updateProfile);
-
 
 router.post('/:userId/avatar', upload.single('avatar'), uploadUserAvatar);
 router.put('/:userId/avatar', upload.single('avatar'), uploadUserAvatar); 
+router.delete('/:userId/avatar', deleteUserAvatar);
 
+router.put('/:userId/change-password', validate(changePasswordSchema), changePassword);
+router.delete('/:userId/account', deleteAccount);
 
-
+router.get('/:userId/groups', getUserGroups);
 
 export default router;
