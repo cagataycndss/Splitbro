@@ -33,7 +33,8 @@ const Profile = () => {
       if (user.avatar.startsWith('data:') || user.avatar.startsWith('http')) {
         return user.avatar;
       }
-      const base = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
+      const fallbackBase = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+      const base = api.defaults.baseURL?.replace('/api', '') || fallbackBase;
       return `${base}${user.avatar}`;
     }
     return null;
