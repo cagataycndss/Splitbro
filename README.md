@@ -18,8 +18,8 @@ Finansal Teknolojiler (FinTech) / Yapay Zekâ Destekli Web & Mobil Uygulama
 
 ## Proje Linkleri
 
-- **REST API Adresi:**  
-- **Web Frontend Adresi:**  
+- **REST API Adresi:** [splitbro-restapi.vercel.app](https://splitbro-restapi.vercel.app)
+- **Web Frontend Adresi:** [splitbro-frontend.vercel.app](https://splitbro-frontend.vercel.app)
 - **Mobil Uygulama:**  
 
 ---
