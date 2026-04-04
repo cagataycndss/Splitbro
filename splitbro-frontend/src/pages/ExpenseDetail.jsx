@@ -74,7 +74,7 @@ const ExpenseDetail = () => {
     setAiCatLoading(true);
     try {
       const res = await api.post('/ai/item-categorization', { itemsList: [newItemName] });
-      const cat = res.data?.data?.results?.[0]?.category || res.data?.results?.[0]?.category;
+      const cat = res.data?.data?.categories?.[0]?.category || res.data?.categories?.[0]?.category;
       if (cat) setNewItemCategory(cat);
     } catch (err) {
       alert("AI Sınıflandırma hatası.");
