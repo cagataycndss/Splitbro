@@ -178,7 +178,97 @@
 - **Authentication:** Bearer Token gerekli
 - **Response:** `200 OK` - Anomali tespiti & fiyat doğrulama başarıyla yapıldı
 
+
+## 18. Profil Bilgilerini Güncelleme (Gökdeniz Erten)
+- **Endpoint:** `PUT /users/{userId}`
+- **Path Parameters:** 
+  - `userId` (string, required) - Kullanıcı ID'si
+- **Request Body:** 
+  ```json
+  {
+    "firstName": "Ali",
+    "lastName": "Duran",
+    "phone": "+905535485215"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Profil bilgileri başarıyla güncellendi
+
+## 19. Grup Oluşturma (Gökdeniz Erten)
+- **Endpoint:** `POST /groups`
+- **Request Body:** 
+  ```json
+  {
+    "name": "Ekip",
+    "description": "Ali"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `201 Created` - Grup başarıyla oluşturuldu
+
+## 20. Gruba Üye Ekleme (Gökdeniz Erten)   
+- **Endpoint:** `POST /groups/{groupId}/members`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Request Body:** 
+  ```json
+  {
+    "userId": "69d26850a6fdb7a3f35d1ce5",
+    "email": "akasap@gmail.com"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Üye gruba başarıyla eklendi
+
+## 21. Grup Üyelerini Listeleme (Gökdeniz Erten)
+- **Endpoint:** `GET /groups/{groupId}/members`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Grup üyeleri başarıyla listelendi
+
+## 22. Gruptan Üye Çıkarma (Gökdeniz Erten)
+- **Endpoint:** `DELETE /groups/{groupId}/members/{userId}`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+  - `userId` (string, required) - Kullanıcı ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `204 No Content` - Üye gruptan başarıyla çıkarıldı
+
+## 23. Profil Resmi Güncelleme (Gökdeniz Erten)
+- **Endpoint:** `PUT /users/{userId}/avatar`
+- **Path Parameters:** 
+  - `userId` (string, required) - Kullanıcı ID'si
+- **Request Body:** form-data ile "avatar" key'ine dosya (file) eklenecek
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Profil resmi başarıyla güncellendi
+
+## 24. Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme (Gökdeniz Erten)  
+- **Endpoint:** `POST /groups/{groupId}/expenses/scan`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Request Body:** form-data ile "receipt" key'ine dosya (file) eklenecek
+- **Authentication:** Bearer Token gerekli
+- **Response:** `201 Created` - Fiş başarıyla okundu ve gider eklendi
+
+## 25. Manuel Gider Ekleme (Gökdeniz Erten)    
+- **Endpoint:** `POST /groups/{groupId}/expenses`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Request Body:** 
+  ```json
+  {
+    "title": "string",
+    "totalAmount": 8627.354106973511,
+    "date": "2020-06-20T15:56:32.238Z"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `201 Created` - Gider başarıyla manuel olarak eklendi
+
 ---
+
+
 
 ## Grup Üyelerinin REST API Metotları
 
