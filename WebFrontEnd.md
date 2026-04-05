@@ -351,5 +351,4 @@
 
 1. [Çağatay Candaş'ın Web Frontend Görevleri](Cagatay-Candas/Cagatay-Candas-Web-Frontend-Gorevleri.md)
 2. [Furkan Kasalak'ın Web Frontend Görevleri](Furkan-Kasalak/Furkan-Kasalak-Web-Frontend-Gorevleri.md)
-3. [Gökdeniz Erten'in Web Frontend Görevleri](Gokdeniz-Erten/Gokdeniz-Erten-Web-Frontend-Gorevleri.md)
-
+3. [Gökdeniz Erten'in Web Frontend Görevleri](Gokdeniz-Erten/Gökdeniz-Erten-Web-Frontend-Gorevleri.md)  

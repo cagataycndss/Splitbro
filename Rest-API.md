@@ -274,5 +274,5 @@
 
 1. [Çağatay Candaş'ın REST API Metotları](Cagatay-Candas/Cagatay-Candas-Rest-API-Gorevleri.md)
 2. [Furkan Kasalak'ın REST API Metotları](Furkan-Kasalak/Furkan-Kasalak-Rest-API-Gorevleri.md)
-3. [Gökdeniz Erten'in REST API Metotları](Gokdeniz-Erten/Gokdeniz-Erten-Rest-API-Gorevleri.md)
+3. [Gökdeniz Erten'in REST API Metotları](Gokdeniz-Erten/Gökdeniz-Erten-Rest-API-Gorevleri.md)
 
