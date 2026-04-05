@@ -95,6 +95,89 @@
 - **Authentication:** Bearer Token gerekli
 - **Response:** `200 OK` - Ürün kategorilendirme ve otomatik etiketleme başarıyla yapıldı
 
+# 10. Kullanıcı Kaydı (Furkan Kasalak)
+- **Endpoint:** `POST /auth/register`
+- **Request Body:** 
+  ```json
+  {
+  "firstName": "string",
+  "lastName": "string",
+  "email": "furkannsddü@gmail.com",
+  "password": "string"
+  }
+  ```
+- **Response:** `201 Created` - Kullanıcı başarıyla kaydedildi
+
+## 11. Kullanıcı Girişi (Furkan Kasalak)
+- **Endpoint:** `POST /auth/login`
+- **Request Body:** 
+  ```json
+  {
+  "email": "furkannsddü@gmail.com",
+  "password": "string"
+  }
+  ```
+- **Response:** `200 OK` - Kullanıcı başarıyla giriş yaptı
+
+## 12. Şifre Değiştirme (Furkan Kasalak)
+- **Endpoint:** `PUT /users/{userId}/change-password`
+- **Path Parameters:** 
+  - `userId` (string, required) - Kullanıcı ID'si- **Request Body:** 
+  ```json
+  {
+    "oldPassword": "string",
+    "newPassword": "string"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Şifre başarıyla değiştirildi
+
+## 13. Profil Bilgilerini Görüntüleme (Furkan Kasalak)
+- **Endpoint:** `GET /users/{userId}/profile`
+- **Path Parameters:** 
+  - `userId` (string, required) - Kullanıcı ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Profil bilgileri başarıyla getirildi
+
+## 14. Hesap Silme (Furkan Kasalak)
+- **Endpoint:** `DELETE /users/{userId}/account`
+- **Path Parameters:** 
+  - `userId` (string, required) - Kullanıcı ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Hesap başarıyla silindi
+
+## 15. Profil Resmi Ekleme (Furkan Kasalak)
+- **Endpoint:** `POST /users/{userId}/avatar`
+- **Path Parameters:** 
+  - `userId` (string, required) - Kullanıcı ID'si
+- **Request Body:** 
+  ```json
+  {
+    "avatar": "base64"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Profil resmi başarıyla eklendi
+
+## 16. Kullanıcının Gruplarını Listeleme (Furkan Kasalak)
+- **Endpoint:** `GET /users/{userId}/groups`
+- **Path Parameters:** 
+  - `userId` (string, required) - Kullanıcı ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Kullanıcının grupları başarıyla getirildi
+
+## 17. AI – Anomali Tespiti & Fiyat Doğrulama (Furkan Kasalak)
+- **Endpoint:** `POST /ai/verify-price`
+- **Request Body:** 
+  ```json
+  {
+    "itemName": "string",
+    "price": 0
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Anomali tespiti & fiyat doğrulama başarıyla yapıldı
+
 ---
 
 ## Grup Üyelerinin REST API Metotları
