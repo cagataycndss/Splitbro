@@ -1,0 +1,374 @@
+{
+  "info": {
+    "_postman_id": "a17fb536-9907-4a39-a0a9-83f51bd65b78",
+    "name": "Gökdeniz - SplitBro API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53765846",
+    "_collection_link": "https://go.postman.co/collection/53765846-a17fb536-9907-4a39-a0a9-83f51bd65b78?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Profil Bilgilerini Güncelleme",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"firstName\": \"Ali\",\r\n  \"lastName\": \"Duran\",\r\n  \"phone\": \"+905535485215\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/users/69d262fb51c8252e206d20b8",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "users",
+            "69d262fb51c8252e206d20b8"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Grup Oluşturma",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Ekip\",\r\n  \"description\": \"Ali\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/groups",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "groups"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gruba Üye Ekleme",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"userId\": \"69d26850a6fdb7a3f35d1ce5\",\r\n  \"email\": \"akasap@gmail.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/groups/69d264efe502b6b0c4456910/members",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "groups",
+            "69d264efe502b6b0c4456910",
+            "members"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Grup Üyelerini Listeleme",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/groups/69d264efe502b6b0c4456910/members",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "groups",
+            "69d264efe502b6b0c4456910",
+            "members"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gruptan Üye Çıkarma",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/groups/69d264efe502b6b0c4456910/members/69d26850a6fdb7a3f35d1ce5",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "groups",
+            "69d264efe502b6b0c4456910",
+            "members",
+            "69d26850a6fdb7a3f35d1ce5"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profil Resmi Güncelleme",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "uuid": "8cbc0f65-1f8e-44cb-8b0b-cf46a467cbc2",
+              "src": "/C:/Users/Erten/OneDrive/Resimler/Ekran resimleri/Ekran Görüntüleri/Ekran görüntüsü 2025-09-21 130502.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/users/69d262fb51c8252e206d20b8/avatar",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "users",
+            "69d262fb51c8252e206d20b8",
+            "avatar"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "receipt",
+              "type": "file",
+              "uuid": "50556216-bc05-4ba5-8d27-10b2811fc1ab",
+              "src": "/C:/Users/Erten/OneDrive/Masaüstü/coffy-alisveris-fisi-vermiyor-2_350x350.jpg"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/groups/69d264efe502b6b0c4456910/expenses/scan",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "groups",
+            "69d264efe502b6b0c4456910",
+            "expenses",
+            "scan"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Manuel Gider Ekleme",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI2MmZiNTFjODI1MmUyMDZkMjBiOCIsImlhdCI6MTc3NTM5NTU3OSwiZXhwIjoxNzc3OTg3NTc5fQ.qBgWv2F-fDEn9FuavtdtixlkL9qUl0twxEyRtj9Xhn0",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"string\",\r\n  \"totalAmount\": 8627.354106973511,\r\n  \"date\": \"2020-06-20T15:56:32.238Z\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://splitbro-restapi.vercel.app/api/groups/69d264efe502b6b0c4456910/expenses",
+          "protocol": "https",
+          "host": [
+            "splitbro-restapi",
+            "vercel",
+            "app"
+          ],
+          "path": [
+            "api",
+            "groups",
+            "69d264efe502b6b0c4456910",
+            "expenses"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZDI1NmZmNmMwYzU4MmU1YzdkM2Y2MiIsImlhdCI6MTc3NTM5MjUxMSwiZXhwIjoxNzc3OTg0NTExfQ.-zXna6nq0BybpUcQVClE1N-42UsIxjkx_oONnF6ZzE",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
