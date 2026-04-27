@@ -207,12 +207,18 @@ const ExpenseDetail = () => {
                        
                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                            <Users size={14} /> Şunlar arasında bölüşülecek: 
-                           {item.assignedUserIds?.length > 0 
-                             ? item.assignedUserIds.map(u => {
-                                 if (typeof u === 'string') return 'Bilinmiyor';
-                                 return u.firstName || u.guestName || 'Bilinmiyor';
-                               }).join(', ') 
-                             : 'Henüz kimse atanmadı'}
+                            {item.assignedUserIds?.length > 0 
+                              ? item.assignedUserIds.map(u => {
+                                  // u might be populated user object OR an ID (guest ID or unpopulated user)
+                                  if (!u) return 'Bilinmiyor';
+                                  if (typeof u === 'object' && (u.firstName || u.guestName)) {
+                                      return u.guestName || `${u.firstName} ${u.lastName}`;
+                                  }
+                                  // Fallback: search in members list
+                                  const m = members.find(mem => (mem.user?._id || mem.user || mem._id) === (u._id || u));
+                                  return m ? (m.guestName || (m.user ? `${m.user.firstName} ${m.user.lastName}` : "Bilinmiyor")) : "Bilinmiyor";
+                                }).join(', ') 
+                              : 'Henüz kimse atanmadı'}
                          </div>
                        </div>
 
@@ -297,9 +303,9 @@ const ExpenseDetail = () => {
                    return (
                      <div key={idx} onClick={() => toggleUserInSplit(uId)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
                        <input type="checkbox" checked={isSelected} readOnly style={{ width: '18px', height: '18px' }} />
-                       <div style={{ flex: 1, fontWeight: isSelected ? 'bold' : 'normal' }}>
-                         {m.guestName || `${m.user?.firstName} ${m.user?.lastName}`}
-                       </div>
+                        <div style={{ flex: 1, fontWeight: isSelected ? 'bold' : 'normal' }}>
+                          {m.guestName || (m.user ? `${m.user.firstName} ${m.user.lastName}` : "Bilinmiyor")}
+                        </div>
                      </div>
                    );
                  })}
