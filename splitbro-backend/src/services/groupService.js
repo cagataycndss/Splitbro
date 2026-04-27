@@ -77,9 +77,10 @@ export const getMembersService = async (groupId, requesterId) => {
   const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
-  const isRequesterMember = group.members.some(
-    (member) => member.user?._id?.toString() === requesterId.toString() || member.user?.toString() === requesterId.toString()
-  );
+  const isRequesterMember = group.members.some((member) => {
+    const memberUserId = member.user?._id || member.user;
+    return memberUserId?.toString() === requesterId.toString();
+  });
   
   if (!isRequesterMember) {
     throw new ApiError(403, 'Grup üyelerini görüntüleme yetkisine sahip değilsiniz.');
@@ -104,9 +105,10 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
   }
 
   const initialMemberCount = group.members.length;
-  group.members = group.members.filter(
-    (member) => member.user?.toString() !== memberIdToRemove.toString() && member._id.toString() !== memberIdToRemove.toString()
-  );
+  group.members = group.members.filter((member) => {
+    const memberUserId = member.user?._id || member.user;
+    return memberUserId?.toString() !== memberIdToRemove.toString() && member._id.toString() !== memberIdToRemove.toString();
+  });
 
   if (group.members.length === initialMemberCount) {
     throw new ApiError(400, 'Kullanıcı zaten grupta yok veya çıkartılamadı!'); 
@@ -148,9 +150,10 @@ export const getGroupDetailsService = async (groupId, requesterId) => {
   const group = await Group.findById(groupId).populate('members.user', 'firstName lastName avatar email');
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
-  const isRequesterMember = group.members.some(
-    (member) => member.user?.toString() === requesterId.toString()
-  );
+  const isRequesterMember = group.members.some((member) => {
+    const memberUserId = member.user?._id || member.user;
+    return memberUserId?.toString() === requesterId.toString();
+  });
   if (!isRequesterMember) {
     throw new ApiError(403, 'Bu grubun detaylarını görüntüleme yetkisine sahip değilsiniz.');
   }

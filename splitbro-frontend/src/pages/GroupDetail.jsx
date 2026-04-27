@@ -214,7 +214,10 @@ const GroupDetail = () => {
     e.stopPropagation();
     setSelectedExpenseForSplit(expense);
     const item = expense.items[0];
-    setSelectedSplitUserIds(item.assignedUserIds.map(u => typeof u === 'string' ? u : (u._id || u.id)));
+    setSelectedSplitUserIds(item.assignedUserIds.map(u => {
+       if (!u) return null;
+       return typeof u === 'string' ? u : (u._id || u.id);
+    }).filter(id => id !== null));
     setQuickSplitModal(true);
   };
 
@@ -571,12 +574,15 @@ const GroupDetail = () => {
                <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
                  {members.map((m, idx) => {
                    const u = m.user;
-                   const isSelected = selectedSplitUserIds.includes(u._id);
+                   const isSelected = u ? selectedSplitUserIds.includes(u._id) : false;
+                   const displayName = m.guestName || (u ? `${u.firstName} ${u.lastName}` : "Bilinmeyen");
+                   const userId = u ? u._id : m._id;
+
                    return (
-                     <div key={idx} onClick={() => toggleUserInSplit(u._id)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                     <div key={idx} onClick={() => toggleUserInSplit(userId)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
                        <input type="checkbox" checked={isSelected} readOnly style={{ width: '18px', height: '18px' }} />
                        <div style={{ flex: 1, fontWeight: isSelected ? 'bold' : 'normal' }}>
-                         {u.firstName} {u.lastName}
+                         {displayName}
                        </div>
                      </div>
                    );
