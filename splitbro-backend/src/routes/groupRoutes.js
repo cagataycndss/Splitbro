@@ -24,6 +24,8 @@ router
   .post(validate(addMemberSchema), groupController.addMember)
   .get(groupController.getMembers);
 
+router.post('/:groupId/members/guest', groupController.addGuest);
+
 router
   .route('/:groupId/members/:userId')
   .delete(groupController.removeMember);

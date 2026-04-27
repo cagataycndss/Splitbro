@@ -48,6 +48,26 @@ export const addMember = catchAsync(async (req, res, next) => {
   });
 });
 
+export const addGuest = catchAsync(async (req, res, next) => {
+  const { groupId } = req.params;
+  const { guestName } = req.body;
+  const requesterId = req.user._id;
+
+  if (!guestName || guestName.trim() === '') {
+    return res.status(400).json({ status: 'fail', message: 'Misafir adı gereklidir.' });
+  }
+
+  const updatedGroup = await groupService.addGuestService(groupId, guestName, requesterId);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Misafir başarıyla eklendi.',
+    data: {
+      groupMembers: updatedGroup.members,
+    },
+  });
+});
+
 export const deleteGroup = catchAsync(async (req, res, next) => {
   await groupService.deleteGroupService(req.group);
 
@@ -134,9 +154,9 @@ export const calculateGroupDebts = catchAsync(async (req, res, next) => {
 
 export const settleDebt = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
-  const { paidBy, paidTo, amount } = req.body;
+  const { paidBy, paidTo, amount, currency } = req.body;
 
-  const settlement = await groupService.settleDebtService(groupId, paidBy, paidTo, amount);
+  const settlement = await groupService.settleDebtService(groupId, paidBy, paidTo, amount, currency);
 
   res.status(201).json({
     status: 'success',

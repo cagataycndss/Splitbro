@@ -16,6 +16,10 @@ export const scanReceiptMockAI = async (imageUrl) => {
           title: 'Akşam Yemeği - Burger',
           amount: 250.75,
           confidenceScore: 92.5,
+          items: [
+            { name: 'BIG MENU', price: 220.75 },
+            { name: 'AYRAN', price: 30.00 }
+          ],
           ocrText: 'RESTORAN A.Ş.\\n1x BIG MENU 220.75\\n1x AYRAN 30.00\\nTOPLAM 250.75 TRY',
         },
       });
@@ -57,12 +61,16 @@ export const scanReceiptWithAI = async (imageUrl) => {
       base64Image = fs.readFileSync(filePath).toString('base64');
     }
     
-    const prompt = `Ekteki fiş veya fatura görüntüsünü analiz et. Fişteki ana satıcı/restoran adını (title olarak) ve en alttaki toplam ödenecek tutarı (amount olarak sayısal) çıkart. Ayrıca ürünlerin ne olduğunu anlamamızı sağlayacak fişin içeriğini okunaklı bir metin olarak (ocrText olarak) çıkart.
+    const prompt = `Ekteki fiş veya fatura görüntüsünü analiz et. Fişteki ana satıcı/restoran adını (title olarak) ve en alttaki toplam ödenecek tutarı (amount olarak sayısal) çıkart. Ayrıca fişteki her bir ürünü ve fiyatını bir liste halinde (items olarak {name, price} objeleri şeklinde) çıkart. Fişin tamamını metin olarak (ocrText olarak) eklemeyi unutma.
     Lütfen sadece şu JSON formatında cevap ver, harici markdown ekleme:
     {
       "title": "Restoran/Satıcı Adı",
       "amount": 100.50,
       "confidenceScore": 95,
+      "items": [
+        { "name": "Burger", "price": 80.00 },
+        { "name": "Kola", "price": 20.50 }
+      ],
       "ocrText": "..."
     }`;
 

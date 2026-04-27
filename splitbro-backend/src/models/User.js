@@ -19,8 +19,12 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function() { return !this.googleId; },
     select: false,
+  },
+  googleId: {
+    type: String,
+    sparse: true,
   },
   avatar: {
     type: String,
@@ -43,14 +47,16 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password') || !this.password) return next();
   
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

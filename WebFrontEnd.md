@@ -304,16 +304,16 @@
 - **UI Bileşenleri:**
   - Harcama başlığı input alanı
   - Tutar input alanı
-  - Tarih seçici (Datepicker)
+  - Para Birimi seçici (TRY/USD/EUR/GBP dropdown)
   - "Kim Ödedi?" seçimi için dropdown listesi
 - **Form Validasyonu:**
   - Tutarın 0'dan büyük olması zorunluluğu
 - **Kullanıcı Deneyimi:**
-  - Fiyat alanı için para birimi formatı (Input masking)
+  - Seçilen para birimine göre sembolün (₺/$/@/£) otomatik değişmesi
   - Kayıt tamamlandığında başarılı bildirimi ve formun sıfırlanması
 - **Teknik Detaylar:**
-  - Tarih objesinin API'nin beklediği ISO formatına çevrilmesi
   - Dropdown için gruptaki mevcut üyelerin ID'lerinin listelenmesi
+  - Seçilen `currency` değerinin API'ye gönderilmesi
 
 ## 24. Profil Resmi Güncelleme (Gökdeniz Erten)
 - **API Endpoint:** `PUT /users/{userId}/avatar`
@@ -330,12 +330,12 @@
   - Client-side FileReader API kullanımı
 
 ## 25. Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme (Gökdeniz Erten)
-- **API Endpoint:** `POST /ai/groups/{groupId}/expenses/scan`
-- **Görev:** Yüklenen fiş/fatura görüntüsünün yapay zeka ile taranıp otomatik gider oluşturulmasını sağlayan ekran tasarımı.
+- **API Endpoint:** `POST /groups/{groupId}/expenses/scan`
+- **Görev:** Yüklenen fiş/fatura görüntüsünün yapay zeka ile taranıp, kalem kalem ürün adı ve fiyatlarının ayrıştırılarak otomatik gider oluşturulmasını sağlayan ekran tasarımı.
 - **UI Bileşenleri:**
   - "Fiş Tara" özel butonu (Görsel olarak vurgulu)
   - Drag & Drop (Sürükle-Bırak) dosya yükleme alanı
-  - Yapay zeka analiz sonuçlarının (okunan tutar ve başlık) gösterildiği Onay Kartı
+  - Yapay zeka analiz sonuçlarının (okunan ürün listesi, fiyatları ve başlık) gösterildiği Onay Kartı
 - **İşlem Validasyonu:**
   - Sadece izin verilen dosya formatları (.jpg, .png) ve maksimum boyut kontrolü
 - **Kullanıcı Deneyimi:**
@@ -344,6 +344,64 @@
 - **Teknik Detaylar:**
   - Uzun süren API çağrıları için Timeout ve asenkron state yönetimi
   - Dosya yükleme (File Upload) süreçleri için FormData kullanımı
+
+## 26. Google ile Giriş Butonu (Gökdeniz Erten)
+- **API Endpoint:** `POST /auth/google`
+- **Görev:** Login ve Register sayfalarına Google OAuth 2.0 ile tek tıkla giriş/kayıt butonunun yerleştirilmesi.
+- **UI Bileşenleri:**
+  - "--- veya ---" ayıracı (Divider)
+  - `<GoogleLogin />` bileşeni (Koyu tema, yuvarlak köşe, Türkçe lokalizasyon)
+- **Kullanıcı Deneyimi:**
+  - Butona tıklayınca Google popup'ı açılır, hesap seçilir, otomatik giriş yapılır
+  - Başarılı girişte Dashboard'ıa yönlendirilir
+- **Teknik Detaylar:**
+  - `@react-oauth/google` kütüphanesi kullanımı
+  - `GoogleOAuthProvider` wrapper ile `main.jsx` sarımlama
+  - `AuthContext` içinde `googleLogin()` fonksiyonu
+
+## 27. Misafir Üye Ekleme Arayüzü (Gökdeniz Erten)
+- **API Endpoint:** `POST /groups/{groupId}/members/guest`
+- **Görev:** Gruba kayıtsız (misafir) üye eklemeyi sağlayan sekme yapısının Üye Ekle modalına entegre edilmesi.
+- **UI Bileşenleri:**
+  - "Kayıtlı Kullanıcı" ve "Kayıtsız Misafir" sekmeleri (Tab yapısı)
+  - Kayıtlı sekmesinde e-posta input alanı
+  - Misafir sekmesinde isim input alanı
+  - "Ekle" butonu
+- **Form Validasyonu:**
+  - Misafir adı boş bırakılamaz
+- **Kullanıcı Deneyimi:**
+  - Tab değiştikçe formun yumuak geçişle değişmesi
+  - Başarılı eklemede üye listesinde misafirin görünmesi
+- **Teknik Detaylar:**
+  - `memberTab` state yönetimi (`registered` / `guest`)
+  - Misafir üyelerin `guestName` ile render edilmesi
+
+## 28. Para Birimi Seçici (Gökdeniz Erten)
+- **API Endpoint:** `POST /groups/{groupId}/expenses` (currency alanı)
+- **Görev:** Manuel gider ekleme formundaki tutar alanının yanına para birimi dropdown'ının yerleştirilmesi.
+- **UI Bileşenleri:**
+  - `<select>` dropdown (TRY/USD/EUR/GBP seçenekleri)
+  - Tutar ve birim alanlarının yan yana flex layout'u
+- **Kullanıcı Deneyimi:**
+  - Varsayılan TRY seçili gelir
+  - Harcama listesinde seçilen birimin sembolü ile tutar gösterilir
+- **Teknik Detaylar:**
+  - `expCurrency` state yönetimi
+  - `currencySymbols` obje mapping'i (₺,$,€,£)
+
+## 29. Grup Borç Hesaplaşması Ekranı (Gökdeniz Erten)
+- **API Endpoint:** `GET /groups/{groupId}/calculate` & `POST /groups/{groupId}/settle`
+- **Görev:** Gruptaki tüm borçların para birimine göre ayrılmış şekilde listelenmesi ve tek tıkla kapatma butonu.
+- **UI Bileşenleri:**
+  - Borç kartları (Borçlu → Alacaklı yön oku ile)
+  - Para birimi badge'i (TRY dışındaki birimler için renkli etiket)
+  - "💳 Ödeştik" butonu (Success renk)
+- **Kullanıcı Deneyimi:**
+  - Borç yoksa kutlama mesajı ("🎉 Kimsenin borcu kalmamış!")
+  - Ödeşme öncesi onay dial̀ogu
+- **Teknik Detaylar:**
+  - Settlement array'inde `currency` alanına göre sembol render'lama
+  - Misafir üyelerin de borcu olanlar listesinde doğru gösterilmesi (`guestName` fallback)
 
 ---
 

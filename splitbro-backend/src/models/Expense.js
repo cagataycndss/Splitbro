@@ -4,7 +4,7 @@ const expenseItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   category: { type: String, default: 'Uncategorized' },
-  assignedUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] 
+  assignedUserIds: [{ type: mongoose.Schema.Types.ObjectId }] 
 });
 
 const expenseSchema = new mongoose.Schema(
@@ -21,8 +21,12 @@ const expenseSchema = new mongoose.Schema(
     },
     paidById: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
       required: [true, 'Ödemeyi yapan kişi belirtilmelidir!'],
+    },
+    currency: {
+      type: String,
+      enum: ['TRY', 'USD', 'EUR', 'GBP'],
+      default: 'TRY',
     },
     groupId: {
       type: mongoose.Schema.Types.ObjectId,
