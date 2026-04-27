@@ -208,7 +208,10 @@ const ExpenseDetail = () => {
                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                            <Users size={14} /> Şunlar arasında bölüşülecek: 
                            {item.assignedUserIds?.length > 0 
-                             ? item.assignedUserIds.map(u => typeof u === 'string' ? '(?id)' : u.firstName).join(', ') 
+                             ? item.assignedUserIds.map(u => {
+                                 if (typeof u === 'string') return 'Bilinmiyor';
+                                 return u.firstName || u.guestName || 'Bilinmiyor';
+                               }).join(', ') 
                              : 'Henüz kimse atanmadı'}
                          </div>
                        </div>
@@ -289,13 +292,13 @@ const ExpenseDetail = () => {
              <form onSubmit={handleSplitSubmit}>
                <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
                  {members.map((m, idx) => {
-                   const u = m.user;
-                   const isSelected = selectedUserIds.includes(u._id);
+                   const uId = m.user?._id || m._id;
+                   const isSelected = selectedUserIds.includes(uId);
                    return (
-                     <div key={idx} onClick={() => toggleUserInSplit(u._id)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                     <div key={idx} onClick={() => toggleUserInSplit(uId)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
                        <input type="checkbox" checked={isSelected} readOnly style={{ width: '18px', height: '18px' }} />
                        <div style={{ flex: 1, fontWeight: isSelected ? 'bold' : 'normal' }}>
-                         {u.firstName} {u.lastName}
+                         {m.guestName || `${m.user?.firstName} ${m.user?.lastName}`}
                        </div>
                      </div>
                    );
@@ -322,10 +325,10 @@ const ExpenseDetail = () => {
              ) : (
                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                  {debts.map((debt, idx) => {
-                   const debtorObj = members.find(m => m.user._id === debt.debtorId)?.user;
-                   const creditorObj = members.find(m => m.user._id === debt.creditorId)?.user;
-                   const debtorName = debtorObj ? `${debtorObj.firstName} ${debtorObj.lastName}` : "Bilinmeyen";
-                   const creditorName = creditorObj ? `${creditorObj.firstName} ${creditorObj.lastName}` : "Ödeyen Kişi";
+                   const debtorObj = members.find(m => (m.user?._id || m._id) === debt.debtorId);
+                   const creditorObj = members.find(m => (m.user?._id || m._id) === debt.creditorId);
+                   const debtorName = debtorObj ? (debtorObj.guestName || `${debtorObj.user?.firstName} ${debtorObj.user?.lastName}`) : "Bilinmeyen";
+                   const creditorName = creditorObj ? (creditorObj.guestName || `${creditorObj.user?.firstName} ${creditorObj.user?.lastName}`) : "Ödeyen Kişi";
                    return (
                      <div key={idx} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', borderLeft: '4px solid var(--success-color)' }}>
                        <div style={{ fontSize: '1.1rem' }}>
