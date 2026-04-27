@@ -615,6 +615,130 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /auth/google:
+    post:
+      tags:
+        - auth
+      summary: Google ile Sosyal Giriş
+      description: Google OAuth 2.0 idToken ile giriş yapar veya otomatik hesap oluşturur.
+      operationId: googleLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idToken
+              properties:
+                idToken:
+                  type: string
+                  description: Google'dan alınan kimlik doğrulama tokeni
+      responses:
+        '200':
+          description: Giriş başarılı
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /groups/{groupId}/members/guest:
+    post:
+      tags:
+        - groups
+      summary: Gruba Misafir Üye Ekleme
+      description: Sisteme kayıtlı olmayan kişilerin isim girilerek gruba misafir olarak eklenmesini sağlar.
+      operationId: addGuestMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - guestName
+              properties:
+                guestName:
+                  type: string
+                  example: "Ayşe Yılmaz"
+      responses:
+        '200':
+          description: Misafir eklendi
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/calculate:
+    get:
+      tags:
+        - groups
+        - expenses
+      summary: Grup Borç Hesaplaşması
+      description: Gruptaki tüm giderleri analiz ederek kimin kime ne kadar borçlu olduğunu para birimine göre hesaplar.
+      operationId: calculateGroupDebts
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      responses:
+        '200':
+          description: Hesaplama başarılı
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupSettlement'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /groups/{groupId}/settle:
+    post:
+      tags:
+        - groups
+        - expenses
+      summary: Borç Kapatma / Ödeşme
+      description: İki üye arasındaki borcu belirtilen para biriminde kapatır.
+      operationId: settleGroupDebt
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GroupIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - paidBy
+                - paidTo
+                - amount
+              properties:
+                paidBy:
+                  type: string
+                  format: uuid
+                paidTo:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  format: float
+                currency:
+                  type: string
+                  enum: [TRY, USD, EUR, GBP]
+                  default: TRY
+      responses:
+        '201':
+          description: Borç kapatıldı
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -667,6 +791,9 @@ components:
         email:
           type: string
           format: email
+        googleId:
+          type: string
+          description: Google OAuth sub ID (opsiyonel)
         avatarUrl:
           type: string
           format: uri
@@ -854,6 +981,28 @@ components:
         amount:
           type: number
           format: float
+        currency:
+          type: string
+          enum: [TRY, USD, EUR, GBP]
+          default: TRY
+
+    GroupSettlement:
+      type: object
+      properties:
+        from:
+          type: string
+          format: uuid
+          description: Borçlu üye ID (veya misafir _id)
+        to:
+          type: string
+          format: uuid
+          description: Alacaklı üye ID (veya misafir _id)
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          enum: [TRY, USD, EUR, GBP]
 
     Error:
       type: object

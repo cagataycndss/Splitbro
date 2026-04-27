@@ -73,6 +73,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (idToken) => {
+    try {
+      const response = await api.post('/auth/google', { idToken });
+      const token = response.data.token || response.data.data?.token;
+
+      localStorage.setItem('token', token);
+      const decoded = jwtDecode(token);
+      setUser(decoded);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Google ile giriş başarısız oldu'
+      };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
@@ -83,6 +100,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
+    googleLogin,
     logout
   };
 

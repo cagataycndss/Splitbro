@@ -81,20 +81,20 @@
 
 ## 6. Manuel Gider Ekleme
 - **API Endpoint:** `POST /groups/{groupId}/expenses`
-- **Görev:** Kullanıcıların ilgili gruba tutar, başlık ve tarih belirterek manuel harcama girebileceği form arayüzü.
+- **Görev:** Kullanıcıların ilgili gruba tutar, başlık ve para birimi belirterek manuel harcama girebileceği form arayüzü.
 - **UI Bileşenleri:**
   - Harcama başlığı input alanı
   - Tutar input alanı
-  - Tarih seçici (Datepicker)
+  - Para Birimi seçici (TRY/USD/EUR/GBP dropdown)
   - "Kim Ödedi?" seçimi için dropdown listesi
 - **Form Validasyonu:**
   - Tutarın 0'dan büyük olması zorunluluğu
 - **Kullanıcı Deneyimi:**
-  - Fiyat alanı için para birimi formatı (Input masking)
+  - Seçilen para birimine göre sembolün otomatik değişmesi
   - Kayıt tamamlandığında başarılı bildirimi ve formun sıfırlanması
 - **Teknik Detaylar:**
-  - Tarih objesinin API'nin beklediği ISO formatına çevrilmesi
   - Dropdown için gruptaki mevcut üyelerin ID'lerinin listelenmesi
+  - Seçilen `currency` değerinin API'ye gönderilmesi
 
 ## 7. Profil Resmi Güncelleme
 - **API Endpoint:** `PUT /users/{userId}/avatar`
@@ -111,12 +111,12 @@
   - Client-side FileReader API kullanımı
 
 ## 8. Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme
-- **API Endpoint:** `POST /ai/groups/{groupId}/expenses/scan`
-- **Görev:** Yüklenen fiş/fatura görüntüsünün yapay zeka ile taranıp otomatik gider oluşturulmasını sağlayan ekran tasarımı.
+- **API Endpoint:** `POST /groups/{groupId}/expenses/scan`
+- **Görev:** Yüklenen fiş/fatura görüntüsünün yapay zeka ile taranıp, kalem kalem ürün adı ve fiyatlarının ayrıştırılarak otomatik gider oluşturulmasını sağlayan ekran tasarımı.
 - **UI Bileşenleri:**
   - "Fiş Tara" özel butonu (Görsel olarak vurgulu)
   - Drag & Drop (Sürükle-Bırak) dosya yükleme alanı
-  - Yapay zeka analiz sonuçlarının (okunan tutar ve başlık) gösterildiği Onay Kartı
+  - Yapay zeka analiz sonuçlarının (okunan ürün listesi, fiyatları ve başlık) gösterildiği Onay Kartı
 - **İşlem Validasyonu:**
   - Sadece izin verilen dosya formatları (.jpg, .png) ve maksimum boyut kontrolü
 - **Kullanıcı Deneyimi:**
@@ -125,3 +125,51 @@
 - **Teknik Detaylar:**
   - Uzun süren API çağrıları için Timeout ve asenkron state yönetimi
   - Dosya yükleme (File Upload) süreçleri için FormData kullanımı
+
+## 9. Google ile Giriş Butonu
+- **API Endpoint:** `POST /auth/google`
+- **Görev:** Login ve Register sayfalarına Google OAuth 2.0 ile tek tıkla giriş/kayıt butonunun yerleştirilmesi.
+- **UI Bileşenleri:**
+  - "--- veya ---" ayıracı (Divider)
+  - `<GoogleLogin />` bileşeni (Koyu tema, yuvarlak köşe, Türkçe lokalizasyon)
+- **Kullanıcı Deneyimi:**
+  - Butona tıklayınca Google popup'ı açılır, hesap seçilir, otomatik giriş yapılır
+  - Başarılı girişte Dashboard'a yönlendirilir
+- **Teknik Detaylar:**
+  - `@react-oauth/google` kütüphanesi
+  - `GoogleOAuthProvider` wrapper
+  - `AuthContext` içinde `googleLogin()` fonksiyonu
+
+## 10. Misafir Üye Ekleme Arayüzü
+- **API Endpoint:** `POST /groups/{groupId}/members/guest`
+- **Görev:** Gruba kayıtsız (misafir) üye eklemeyi sağlayan sekme yapısının Üye Ekle modal'ına entegre edilmesi.
+- **UI Bileşenleri:**
+  - "Kayıtlı Kullanıcı" ve "Kayıtsız Misafir" sekmeleri (Tab yapısı)
+  - Misafir sekmesinde isim input alanı
+  - "Ekle" butonu
+- **Form Validasyonu:**
+  - Misafir adı boş bırakılamaz
+- **Teknik Detaylar:**
+  - `memberTab` state yönetimi
+  - Misafir üyelerin `guestName` ile listelenmesi
+
+## 11. Para Birimi Seçici
+- **API Endpoint:** `POST /groups/{groupId}/expenses` (currency alanı)
+- **Görev:** Manuel gider ekleme formundaki tutar alanının yanına para birimi dropdown'ının yerleştirilmesi.
+- **UI Bileşenleri:**
+  - `<select>` dropdown (TRY/USD/EUR/GBP)
+  - Tutar ve birim alanlarının yan yana flex layout'u
+- **Teknik Detaylar:**
+  - `expCurrency` state yönetimi
+  - `currencySymbols` obje mapping'i
+
+## 12. Grup Borç Hesaplaşması Ekranı
+- **API Endpoint:** `GET /groups/{groupId}/calculate` & `POST /groups/{groupId}/settle`
+- **Görev:** Gruptaki tüm borçların para birimine göre ayrılmış şekilde listelenmesi ve tek tıkla kapatma butonu.
+- **UI Bileşenleri:**
+  - Borç kartları (Borçlu → Alacaklı ok ile)
+  - Para birimi badge'i
+  - "💳 Ödeştik" butonu
+- **Teknik Detaylar:**
+  - Settlement array'inde `currency` alanına göre sembol render'lama
+  - Misafir üyelerin `guestName` fallback ile gösterilmesi

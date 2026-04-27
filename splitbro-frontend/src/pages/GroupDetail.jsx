@@ -33,13 +33,18 @@ const GroupDetail = () => {
   const [scanning, setScanning] = useState(false);
   const receiptInputRef = useRef(null);
   
+  const [memberTab, setMemberTab] = useState('registered'); // 'registered' or 'guest'
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newGuestName, setNewGuestName] = useState('');
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
 
   const [expTitle, setExpTitle] = useState('');
   const [expAmount, setExpAmount] = useState('');
   const [expPaidBy, setExpPaidBy] = useState('');
+  const [expCurrency, setExpCurrency] = useState('TRY');
+
+  const currencySymbols = { TRY: '₺', USD: '$', EUR: '€', GBP: '£' };
 
   const fetchData = async () => {
     try {
@@ -102,12 +107,14 @@ const GroupDetail = () => {
       await api.post(`/groups/${groupId}/expenses`, {
          title: expTitle,
          totalAmount: Number(expAmount),
+         currency: expCurrency,
          paidById: expPaidBy || undefined
       });
       setManualExpenseModal(false);
       setExpTitle('');
       setExpAmount('');
       setExpPaidBy('');
+      setExpCurrency('TRY');
       fetchData();
     } catch (error) {
        alert("Gider eklenemedi: " + (error.response?.data?.message || error.message));
@@ -123,6 +130,18 @@ const GroupDetail = () => {
        fetchData();
     } catch (error) {
        alert("Üye eklenemedi: " + (error.response?.data?.message || 'Geçici hata'));
+    }
+  };
+
+  const addGuest = async (e) => {
+    e.preventDefault();
+    try {
+       await api.post(`/groups/${groupId}/members/guest`, { guestName: newGuestName });
+       setMemberModal(false);
+       setNewGuestName('');
+       fetchData();
+    } catch (error) {
+       alert("Misafir eklenemedi: " + (error.response?.data?.message || 'Geçici hata'));
     }
   };
 
@@ -298,7 +317,7 @@ const GroupDetail = () => {
                              </div>
                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-                                 ₺{expense.totalAmount}
+                                 {currencySymbols[expense.currency] || '₺'}{expense.totalAmount}
                                </div>
                                {expense.items?.length === 1 && (
                                  <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={(e) => openQuickSplit(e, expense)}>
@@ -338,14 +357,14 @@ const GroupDetail = () => {
                           {(member.user?.firstName?.[0] || '?').toUpperCase()}
                         </div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
-                          <div style={{ fontWeight: '500', fontSize: '0.95rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{member.user?.firstName} {member.user?.lastName}</div>
+                          <div style={{ fontWeight: '500', fontSize: '0.95rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{member.guestName || `${member.user?.firstName} ${member.user?.lastName}`}</div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
-                            {member.role === 'owner' ? 'Kurucu' : member.role}
-                            <span style={{color: 'rgba(255,255,255,0.4)', marginLeft:'5px'}}>{member.user?._id?.substring(0,6)}...</span>
+                            {member.role === 'owner' ? 'Kurucu' : (member.role === 'guest' ? 'Misafir' : member.role)}
+                            {member.user && <span style={{color: 'rgba(255,255,255,0.4)', marginLeft:'5px'}}>{member.user?._id?.substring(0,6)}...</span>}
                           </div>
                         </div>
                         {isOwner && member.role !== 'owner' && (
-                          <button onClick={() => kickMember(member.user._id)} style={{ background: 'none', border:'none', color: 'var(--danger-color)', cursor: 'pointer' }} title="Gruptan Çıkar">
+                          <button onClick={() => kickMember(member._id)} style={{ background: 'none', border:'none', color: 'var(--danger-color)', cursor: 'pointer' }} title="Gruptan Çıkar">
                             <Trash2 size={16} />
                           </button>
                         )}
@@ -370,22 +389,33 @@ const GroupDetail = () => {
                  <label className="input-label">Neye Harcandı?</label>
                  <input type="text" className="glass-input" placeholder="Örn: Akşam Yemeği" value={expTitle} onChange={e=>setExpTitle(e.target.value)} required />
                </div>
-               <div className="input-group">
-                 <label className="input-label">Toplam Tutar (₺)</label>
-                 <input type="number" step="0.01" className="glass-input" placeholder="Örn: 250" value={expAmount} onChange={e=>setExpAmount(e.target.value)} required />
-               </div>
+               <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div className="input-group" style={{ flex: 3 }}>
+                    <label className="input-label">Toplam Tutar</label>
+                    <input type="number" step="0.01" className="glass-input" placeholder="Örn: 250" value={expAmount} onChange={e=>setExpAmount(e.target.value)} required />
+                  </div>
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label className="input-label">Birim</label>
+                    <select className="glass-input" value={expCurrency} onChange={e=>setExpCurrency(e.target.value)} style={{ cursor: 'pointer' }}>
+                      <option value="TRY">₺ TRY</option>
+                      <option value="USD">$ USD</option>
+                      <option value="EUR">€ EUR</option>
+                      <option value="GBP">£ GBP</option>
+                    </select>
+                  </div>
+                </div>
                
                <div className="input-group">
                  <label className="input-label" style={{ marginBottom: '0.75rem' }}>Bu harcamayı kim ödedi?</label>
                  <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                    {members.map((m, idx) => {
-                     const u = m.user;
-                     const isSelected = expPaidBy === u._id;
+                     const uId = m.user?._id || m._id;
+                     const isSelected = expPaidBy === uId;
                      return (
-                       <div key={idx} onClick={() => setExpPaidBy(u._id)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.6rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                       <div key={idx} onClick={() => setExpPaidBy(uId)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.6rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
                          <input type="radio" name="paidBy" checked={isSelected} readOnly style={{ width: '16px', height: '16px' }} />
                          <div style={{ fontWeight: isSelected ? 'bold' : 'normal', fontSize: '0.9rem' }}>
-                           {u.firstName} {u.lastName}
+                           {m.guestName || `${m.user?.firstName} ${m.user?.lastName}`}
                          </div>
                        </div>
                      );
@@ -491,18 +521,39 @@ const GroupDetail = () => {
       {memberModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="glass-panel animate-fade-in" style={{ width: '400px', padding: '2rem' }}>
-             <h2 style={{ marginBottom: '1.5rem' }}>Gruba Üye Ekle</h2>
-             <form onSubmit={addMember}>
-               <div className="input-group">
-                 <label className="input-label">Kullanıcı E-posta Adresi (Örn: ali@gmail.com)</label>
-                 <input type="email" className="glass-input" placeholder="Olası arkadaşınızın SplitBro E-posta adresi" value={newMemberEmail} onChange={e=>setNewMemberEmail(e.target.value)} required />
-               </div>
-               
-               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setMemberModal(false)}>İptal</button>
-                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Davet Et</button>
-               </div>
-             </form>
+             <h2 style={{ marginBottom: '1rem' }}>Üye Ekle</h2>
+             
+             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
+               <button onClick={() => setMemberTab('registered')} style={{ background: 'none', border: 'none', color: memberTab === 'registered' ? 'var(--primary-color)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: memberTab === 'registered' ? 'bold' : 'normal', borderBottom: memberTab === 'registered' ? '2px solid var(--primary-color)' : 'none', paddingBottom: '0.25rem' }}>Kayıtlı Kullanıcı</button>
+               <button onClick={() => setMemberTab('guest')} style={{ background: 'none', border: 'none', color: memberTab === 'guest' ? 'var(--primary-color)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: memberTab === 'guest' ? 'bold' : 'normal', borderBottom: memberTab === 'guest' ? '2px solid var(--primary-color)' : 'none', paddingBottom: '0.25rem' }}>Kayıtsız Misafir</button>
+             </div>
+
+             {memberTab === 'registered' ? (
+               <form onSubmit={addMember}>
+                 <div className="input-group">
+                   <label className="input-label">Kullanıcı E-posta Adresi</label>
+                   <input type="email" className="glass-input" placeholder="ali@gmail.com" value={newMemberEmail} onChange={e=>setNewMemberEmail(e.target.value)} required />
+                 </div>
+                 
+                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                   <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setMemberModal(false)}>İptal</button>
+                   <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Davet Et</button>
+                 </div>
+               </form>
+             ) : (
+               <form onSubmit={addGuest}>
+                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Arkadaşınızın sisteme kaydolmasına gerek kalmadan bir misafir profili ekleyin.</p>
+                 <div className="input-group">
+                   <label className="input-label">Misafir Adı ve Soyadı</label>
+                   <input type="text" className="glass-input" placeholder="Örn: Ayşe Yılmaz" value={newGuestName} onChange={e=>setNewGuestName(e.target.value)} required />
+                 </div>
+                 
+                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                   <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setMemberModal(false)}>İptal</button>
+                   <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Misafir Ekle</button>
+                 </div>
+               </form>
+             )}
           </div>
         </div>
       )}
@@ -559,11 +610,12 @@ const GroupDetail = () => {
                  </div>
                ) : (
                  groupDebts.map((debt, idx) => {
-                   const debtorObj = members.find(m => m.user._id === debt.from)?.user;
-                   const creditorObj = members.find(m => m.user._id === debt.to)?.user;
+                   const debtorMember = members.find(m => (m.user?._id || m._id) === debt.from);
+                   const creditorMember = members.find(m => (m.user?._id || m._id) === debt.to);
                    
-                   const debtorName = debtorObj ? `${debtorObj.firstName} ${debtorObj.lastName}` : "Bilinmeyen";
-                   const creditorName = creditorObj ? `${creditorObj.firstName} ${creditorObj.lastName}` : "Bilinmeyen";
+                   const debtorName = debtorMember ? (debtorMember.guestName || `${debtorMember.user?.firstName} ${debtorMember.user?.lastName}`) : "Bilinmeyen";
+                   const creditorName = creditorMember ? (creditorMember.guestName || `${creditorMember.user?.firstName} ${creditorMember.user?.lastName}`) : "Bilinmeyen";
+                   const sym = currencySymbols[debt.currency] || '₺';
                    
                    return (
                      <div key={idx} className="glass-card" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderLeft: '4px solid var(--primary-color)' }}>
@@ -571,19 +623,20 @@ const GroupDetail = () => {
                           <span style={{ fontWeight: 'bold' }}>{debtorName}</span>
                           <ArrowRight size={16} color="var(--text-secondary)" />
                           <span style={{ fontWeight: 'bold' }}>{creditorName}</span>
+                          {debt.currency && debt.currency !== 'TRY' && <span style={{ fontSize: '0.7rem', background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: '600' }}>{debt.currency}</span>}
                         </div>
                         
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                           <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-                            ₺{debt.amount.toFixed(2)}
+                            {sym}{debt.amount.toFixed(2)}
                           </div>
                           <button 
                             className="btn btn-primary" 
                             style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: 'var(--success-color)', borderColor: 'var(--success-color)', whiteSpace: 'nowrap' }}
                             onClick={async () => {
-                              if(!window.confirm(`${debtorName} \u2192 ${creditorName} aras\u0131ndaki \u20ba${debt.amount.toFixed(2)} bor\u00e7 kapat\u0131ls\u0131n m\u0131?`)) return;
+                              if(!window.confirm(`${debtorName} → ${creditorName} arasındaki ${sym}${debt.amount.toFixed(2)} borç kapatılsın mı?`)) return;
                               try {
-                                await api.post(`/groups/${groupId}/settle`, { paidBy: debt.from, paidTo: debt.to, amount: debt.amount });
+                                await api.post(`/groups/${groupId}/settle`, { paidBy: debt.from, paidTo: debt.to, amount: debt.amount, currency: debt.currency || 'TRY' });
                                 const res = await api.get(`/groups/${groupId}/calculate`);
                                 setGroupDebts(res.data?.data || res.data);
                                 fetchData();

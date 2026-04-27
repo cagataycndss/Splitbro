@@ -72,7 +72,7 @@
   - `groupId` (string, required) - Grup ID'si
 - **Request Body:** form-data ile "receipt" key'ine dosya (file) eklenecek
 - **Authentication:** Bearer Token gerekli
-- **Response:** `201 Created` - Fiş başarıyla okundu ve gider eklendi
+- **Response:** `201 Created` - Fiş başarıyla okundu, kalem kalem ürün ayrıştırılarak gider eklendi
 
 ## 8. Manuel Gider Ekleme
 - **Endpoint:** `POST /groups/{groupId}/expenses`
@@ -81,10 +81,59 @@
 - **Request Body:** 
   ```json
   {
-    "title": "string",
-    "totalAmount": 8627.354106973511,
-    "date": "2020-06-20T15:56:32.238Z"
+    "title": "Akşam Yemeği",
+    "totalAmount": 450.00,
+    "currency": "TRY",
+    "paidById": "69d16c24e390f5da31e7890b"
   }
   ```
 - **Authentication:** Bearer Token gerekli
 - **Response:** `201 Created` - Gider başarıyla manuel olarak eklendi
+- **Not:** `currency` alanı opsiyoneldir. Desteklenen değerler: `TRY`, `USD`, `EUR`, `GBP`.
+
+## 9. Google ile Sosyal Giriş (OAuth 2.0)
+- **Endpoint:** `POST /auth/google`
+- **Request Body:** 
+  ```json
+  {
+    "idToken": "eyJhbGciOiJSUzI1NiIs..."
+  }
+  ```
+- **Response:** `200 OK` - Google ile giriş başarılı
+- **Not:** Google'dan alınan `idToken` doğrulanır; kullanıcı yoksa otomatik hesap açılır.
+
+## 10. Gruba Misafir (Kayıtsız) Üye Ekleme
+- **Endpoint:** `POST /groups/{groupId}/members/guest`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Request Body:** 
+  ```json
+  {
+    "guestName": "Ayşe Yılmaz"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Misafir üye başarıyla eklendi
+
+## 11. Grup Borç Hesaplaşması
+- **Endpoint:** `GET /groups/{groupId}/calculate`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Borçlar para birimine göre ayrılarak hesaplandı
+
+## 12. Borç Kapatma / Ödeşme
+- **Endpoint:** `POST /groups/{groupId}/settle`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Request Body:** 
+  ```json
+  {
+    "paidBy": "userId1",
+    "paidTo": "userId2",
+    "amount": 125.50,
+    "currency": "TRY"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `201 Created` - Borç başarıyla kapatıldı

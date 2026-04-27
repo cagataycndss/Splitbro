@@ -258,13 +258,71 @@
 - **Request Body:** 
   ```json
   {
-    "title": "string",
-    "totalAmount": 8627.354106973511,
-    "date": "2020-06-20T15:56:32.238Z"
+    "title": "Akşam Yemeği",
+    "totalAmount": 450.00,
+    "currency": "TRY",
+    "paidById": "69d16c24e390f5da31e7890b"
   }
   ```
 - **Authentication:** Bearer Token gerekli
 - **Response:** `201 Created` - Gider başarıyla manuel olarak eklendi
+- **Not:** `currency` alanı opsiyoneldir. Gönderilmezse varsayılan olarak `TRY` kabul edilir. Desteklenen değerler: `TRY`, `USD`, `EUR`, `GBP`.
+
+## 26. Google ile Sosyal Giriş (Gökdeniz Erten)
+- **Endpoint:** `POST /auth/google`
+- **Request Body:** 
+  ```json
+  {
+    "idToken": "eyJhbGciOiJSUzI1NiIs..."
+  }
+  ```
+- **Response:** `200 OK` - Google ile giriş başarılı
+- **Not:** `idToken`, Google OAuth 2.0 istemcisinden alınan kimlik doğrulama tokenidir. Sistem bu token'ı doğrular; kullanıcı yoksa otomatik hesap oluşturur, varsa giriş yapar.
+
+## 27. Gruba Misafir (Kayıtsız) Üye Ekleme (Gökdeniz Erten)
+- **Endpoint:** `POST /groups/{groupId}/members/guest`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Request Body:** 
+  ```json
+  {
+    "guestName": "Ayşe Yılmaz"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Misafir üye başarıyla eklendi
+- **Not:** Misafir üye sisteme kayıt olmaz, sadece grubun içinde bir `guestName` ve otomatik `_id` ile tutulur.
+
+## 28. Grup Borç Hesaplaşması (Gökdeniz Erten)
+- **Endpoint:** `GET /groups/{groupId}/calculate`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Grup borçları başarıyla hesaplandı
+- **Response Body Örneği:**
+  ```json
+  [
+    { "from": "userId1", "to": "userId2", "amount": 125.50, "currency": "TRY" },
+    { "from": "userId1", "to": "userId3", "amount": 30.00, "currency": "USD" }
+  ]
+  ```
+- **Not:** Borçlar para birimine göre gruplandırılarak optimize edilir.
+
+## 29. Borç Kapatma / Ödeşme (Gökdeniz Erten)
+- **Endpoint:** `POST /groups/{groupId}/settle`
+- **Path Parameters:** 
+  - `groupId` (string, required) - Grup ID'si
+- **Request Body:** 
+  ```json
+  {
+    "paidBy": "userId1",
+    "paidTo": "userId2",
+    "amount": 125.50,
+    "currency": "TRY"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `201 Created` - Borç başarıyla kapatıldı
 
 ---
 

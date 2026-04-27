@@ -2,14 +2,27 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true);
+    setError('');
+    const res = await googleLogin(credentialResponse.credential);
+    if (res.success) {
+      navigate('/dashboard');
+    } else {
+      setError(res.message);
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -66,6 +79,24 @@ const Login = () => {
             {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
+          <div style={{ flex: 1, height: '1px', background: 'var(--surface-border)' }} />
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>veya</span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--surface-border)' }} />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google ile giriş yapılırken bir hata oluştu.')}
+            theme="filled_black"
+            shape="pill"
+            size="large"
+            text="signin_with"
+            locale="tr"
+          />
+        </div>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
           Hesabın yok mu? <Link to="/register" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 'bold' }}>Kayıt Ol</Link>

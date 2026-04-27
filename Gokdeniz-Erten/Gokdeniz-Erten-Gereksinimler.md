@@ -35,5 +35,25 @@
 
 8. Yapay Zeka (AI) Destekli Fiş Okuma ve Otomatik Gider Ekleme
 
-   * **API Metodu:** `POST /ai/groups/{groupId}/expenses/scan`
-   * **Açıklama:** Yüklenen fiş/fatura görüntüsündeki verileri yapay zeka (OCR) ile okuyup otomatik gider kaydı oluşturur.
+   * **API Metodu:** `POST /groups/{groupId}/expenses/scan`
+   * **Açıklama:** Yüklenen fiş/fatura görüntüsündeki verileri yapay zeka (OCR) ile okuyup, kalem kalem ürün adı ve fiyatlarını ayrıştırarak otomatik gider kaydı oluşturur.
+
+9. Google ile Sosyal Giriş (OAuth 2.0)
+
+   * **API Metodu:** `POST /auth/google`
+   * **Açıklama:** Kullanıcıların Google hesaplarıyla tek tıkla giriş yapmasını veya otomatik kayıt olmasını sağlar. Google'dan alınan `idToken` backend tarafından doğrulanır.
+
+10. Çoklu Para Birimi Desteği (Multi-Currency)
+
+    * **API Metodu:** `POST /groups/{groupId}/expenses` (currency alanı)
+    * **Açıklama:** Gider oluştururken TRY, USD, EUR, GBP gibi farklı para birimleri seçilebilir. Borç hesaplamaları para birimine göre ayrı ayrı yapılır.
+
+11. Gruba Misafir (Kayıtsız) Üye Ekleme
+
+    * **API Metodu:** `POST /groups/{groupId}/members/guest`
+    * **Açıklama:** Sisteme kayıtlı olmayan kişilerin sadece isim girilerek gruba misafir olarak eklenmesini sağlar. Misafirler veritabanında ayrı bir kullanıcı oluşturmadan grubun içinde tutulur.
+
+12. Grup Borç Optimizasyonu ve Hesaplaşma
+
+    * **API Metodu:** `GET /groups/{groupId}/calculate` & `POST /groups/{groupId}/settle`
+    * **Açıklama:** Gruptaki tüm giderleri analiz ederek kimin kime ne kadar borçlu olduğunu optimize bir şekilde hesaplar. Borç kapatma işlemi de bu endpoint üzerinden yapılır.
