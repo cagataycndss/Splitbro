@@ -145,51 +145,6 @@ export const getMembersService = async (groupId, requesterId) => {
   const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
-  const isRequesterMember = group.members.some(
-    (member) => member.user?.toString() === requesterId.toString()
-  );
-  if (!isRequesterMember) {
-    throw new ApiError(403, 'Gruba misafir eklemek için yetkiniz yok.');
-  }
-
-  group.members.push({ guestName, role: 'guest' });
-  await group.save();
-
-  return group;
-};
-
-// Gökdeniz Erten – Redis Cache ile Grup Üyeleri Listeleme
-export const getMembersService = async (groupId, requesterId) => {
-  const cacheKey = `group:${groupId}:members`;
-
-  // Redis'ten cache kontrolü
-  try {
-    if (redisClient.isOpen) {
-      const cachedData = await redisClient.get(cacheKey);
-      if (cachedData) {
-        const parsedMembers = JSON.parse(cachedData);
-        // Cache'den geldiğinde de yetki kontrolü yap
-        const isRequesterMember = parsedMembers.some(
-          (member) => {
-            const memberId = member.user?._id || member.user;
-            return memberId?.toString() === requesterId.toString();
-          }
-        );
-        if (!isRequesterMember) {
-          throw new ApiError(403, 'Grup üyelerini görüntüleme yetkisine sahip değilsiniz.');
-        }
-        return { members: parsedMembers, cached: true };
-      }
-    }
-  } catch (err) {
-    if (err instanceof ApiError) throw err;
-    console.error('[Gökdeniz] Redis Members Get Error:', err);
-  }
-
-  // DB'den çek
-  const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
-  if (!group) throw new ApiError(404, 'Grup bulunamadı');
-
   const isRequesterMember = group.members.some((member) => {
     const memberUserId = member.user?._id || member.user;
     return memberUserId?.toString() === requesterId.toString();
@@ -356,26 +311,26 @@ export const calculateGroupDebtsService = async (groupId) => {
   for (const [currency, currExpenses] of Object.entries(groupedExpenses)) {
     const debtMap = new Map(); 
 
-  expenses.forEach(expense => {
-      const creditorId = expense.paidById.toString();
-      
-      expense.items.forEach(item => {
-          const usersCount = item.assignedUserIds.length;
-          if (usersCount === 0) return;
-          const splitAmount = item.price / usersCount;
-          
-          item.assignedUserIds.forEach(userIdObj => {
-              const debtorId = userIdObj.toString();
-              if (debtorId === creditorId) return;
+    currExpenses.forEach(expense => {
+        const creditorId = expense.paidById.toString();
+        
+        expense.items.forEach(item => {
+            const usersCount = item.assignedUserIds.length;
+            if (usersCount === 0) return;
+            const splitAmount = item.price / usersCount;
+            
+            item.assignedUserIds.forEach(userIdObj => {
+                const debtorId = userIdObj.toString();
+                if (debtorId === creditorId) return;
 
                 const cBal = debtMap.get(creditorId) || 0;
                 debtMap.set(creditorId, cBal + splitAmount);
 
-              const dBal = debtMap.get(debtorId) || 0;
-              debtMap.set(debtorId, dBal - splitAmount);
-          });
-      });
-  });
+                const dBal = debtMap.get(debtorId) || 0;
+                debtMap.set(debtorId, dBal - splitAmount);
+            });
+        });
+    });
 
     let debtors = []; 
     let creditors = []; 
