@@ -11,7 +11,9 @@ export const changePassword = catchAsync(async (req, res, next) => {
 
 export const getProfile = catchAsync(async (req, res) => {
   const result = await userService.getUserProfile(req.params.userId);
-  res.status(200).json({ data: result });
+  // Furkan Kasalak – Redis cache flag'ini response'a ekle
+  const cached = result._cached || false;
+  res.status(200).json({ data: result, cached });
 });
 
 export const uploadUserAvatar = catchAsync(async (req, res) => {

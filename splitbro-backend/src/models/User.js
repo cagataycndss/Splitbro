@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  isGuest: {
+    type: Boolean,
+    default: false,
+  },
   isDeleted: {
     type: Boolean,
     default: false,

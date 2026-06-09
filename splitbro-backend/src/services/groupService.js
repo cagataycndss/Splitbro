@@ -3,6 +3,29 @@ import Expense from '../models/Expense.js';
 import User from '../models/User.js';
 import { scanReceiptWithAI } from './aiScannerService.js';
 import ApiError from '../utils/ApiError.js';
+import redisClient from '../config/redis.js';
+
+export const invalidateGroupDebtsCache = async (groupId) => {
+  try {
+    if (redisClient.isOpen) {
+      await redisClient.del(`group:${groupId}:debts`);
+    }
+  } catch (err) {
+    console.error('Redis Invalidation Error:', err);
+  }
+};
+
+// Gökdeniz Erten – Grup üye listesi cache invalidation yardımcı fonksiyonu
+const invalidateGroupMembersCache = async (groupId) => {
+  try {
+    if (redisClient.isOpen) {
+      await redisClient.del(`group:${groupId}:members`);
+    }
+  } catch (err) {
+    console.error('[Gökdeniz] Redis Members Cache Invalidation Error:', err);
+  }
+};
+
 
 export const createGroupService = async (groupData) => {
   const newGroup = await Group.create({
@@ -25,8 +48,10 @@ export const updateGroupService = async (group, updateData) => {
 
 export const deleteGroupService = async (group) => {
   await Expense.deleteMany({ groupId: group._id });
-  
   await Group.findByIdAndDelete(group._id);
+  await invalidateGroupDebtsCache(group._id);
+  // Gökdeniz Erten – Grup silindiğinde üye cache'ini invalidate et
+  await invalidateGroupMembersCache(group._id);
 };
 
 export const addMemberService = async (groupId, email, requesterId, role = 'member') => {
@@ -53,10 +78,70 @@ export const addMemberService = async (groupId, email, requesterId, role = 'memb
   group.members.push({ user: newMemberId, role });
   await group.save();
 
+  // Gökdeniz Erten – Üye eklendiğinde cache'i invalidate et
+  await invalidateGroupMembersCache(groupId);
+
   return group;
 };
 
+export const addGuestMemberService = async (groupId, guestName, requesterId) => {
+  const group = await Group.findById(groupId);
+  if (!group) throw new ApiError(404, 'Grup bulunamadı');
+
+  const isRequesterMember = group.members.some(
+    (member) => member.user.toString() === requesterId.toString()
+  );
+  if (!isRequesterMember) {
+    throw new ApiError(403, 'Gruba üye eklemek için yetkiniz yok (Grup üyesi değilsiniz).');
+  }
+
+  // Misafir için dummy User oluştur (Gerçek giriş yapamaz, sadece hesaplamalarda yer alır)
+  const dummyEmail = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 5)}@splitbro.app`;
+  const guestUser = await User.create({
+    firstName: guestName,
+    lastName: '(Misafir)',
+    email: dummyEmail,
+    password: 'guestpassword123',
+    isGuest: true
+  });
+
+  group.members.push({ user: guestUser._id, role: 'member' });
+  await group.save();
+
+  await invalidateGroupMembersCache(groupId);
+
+  return group;
+};
+
+// Gökdeniz Erten – Redis Cache ile Grup Üyeleri Listeleme
 export const getMembersService = async (groupId, requesterId) => {
+  const cacheKey = `group:${groupId}:members`;
+
+  // Redis'ten cache kontrolü
+  try {
+    if (redisClient.isOpen) {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        const parsedMembers = JSON.parse(cachedData);
+        // Cache'den geldiğinde de yetki kontrolü yap
+        const isRequesterMember = parsedMembers.some(
+          (member) => {
+            const memberId = member.user?._id || member.user;
+            return memberId?.toString() === requesterId.toString();
+          }
+        );
+        if (!isRequesterMember) {
+          throw new ApiError(403, 'Grup üyelerini görüntüleme yetkisine sahip değilsiniz.');
+        }
+        return { members: parsedMembers, cached: true };
+      }
+    }
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error('[Gökdeniz] Redis Members Get Error:', err);
+  }
+
+  // DB'den çek
   const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
@@ -68,7 +153,16 @@ export const getMembersService = async (groupId, requesterId) => {
     throw new ApiError(403, 'Grup üyelerini görüntüleme yetkisine sahip değilsiniz.');
   }
 
-  return group.members;
+  // Redis'e cache'le (30 dakika = 1800 saniye)
+  try {
+    if (redisClient.isOpen) {
+      await redisClient.set(cacheKey, JSON.stringify(group.members), { EX: 1800 });
+    }
+  } catch (err) {
+    console.error('[Gökdeniz] Redis Members Set Error:', err);
+  }
+
+  return { members: group.members, cached: false };
 };
 
 export const removeMemberService = async (groupId, memberIdToRemove, requesterId) => {
@@ -96,6 +190,8 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
   }
 
   await group.save();
+  // Gökdeniz Erten – Üye çıkarıldığında cache'i invalidate et
+  await invalidateGroupMembersCache(groupId);
   return group.members;
 };
 
@@ -123,6 +219,8 @@ export const createExpenseViaAIScannerService = async (groupId, paidById, imageU
     }
   });
 
+  await invalidateGroupDebtsCache(groupId);
+
   return newExpense;
 };
 
@@ -149,6 +247,17 @@ export const getGroupDetailsService = async (groupId, requesterId) => {
 };
 
 export const calculateGroupDebtsService = async (groupId) => {
+  const cacheKey = `group:${groupId}:debts`;
+  
+  try {
+    if (redisClient.isOpen) {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) return JSON.parse(cachedData);
+    }
+  } catch (err) {
+    console.error('Redis Get Error:', err);
+  }
+
   const group = await Group.findById(groupId);
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
@@ -159,11 +268,19 @@ export const calculateGroupDebtsService = async (groupId) => {
       const creditorId = expense.paidById.toString();
       
       expense.items.forEach(item => {
-          const usersCount = item.assignedUserIds.length;
+          let targetUserIds = item.assignedUserIds;
+          
+          // Eğer ürüne kimse atanmadıysa (örneğin fiş yeni eklendiğinde),
+          // varsayılan olarak grubun tüm üyelerine eşit bölüştürülür.
+          if (!targetUserIds || targetUserIds.length === 0) {
+              targetUserIds = group.members.map(m => m.user);
+          }
+          
+          const usersCount = targetUserIds.length;
           if (usersCount === 0) return;
           const splitAmount = item.price / usersCount;
           
-          item.assignedUserIds.forEach(userIdObj => {
+          targetUserIds.forEach(userIdObj => {
               const debtorId = userIdObj.toString();
               if (debtorId === creditorId) return;
 
@@ -175,6 +292,7 @@ export const calculateGroupDebtsService = async (groupId) => {
           });
       });
   });
+
 
   let debtors = []; 
   let creditors = []; 
@@ -210,6 +328,15 @@ export const calculateGroupDebtsService = async (groupId) => {
       if (creditor.balance < 0.01) c++;
   }
 
+  try {
+    if (redisClient.isOpen) {
+      // 1 saat (3600 sn) boyunca önbellekte tut
+      await redisClient.set(cacheKey, JSON.stringify(settlements), { EX: 3600 });
+    }
+  } catch (err) {
+    console.error('Redis Set Error:', err);
+  }
+
   return settlements;
 };
 
@@ -231,6 +358,8 @@ export const settleDebtService = async (groupId, paidBy, paidTo, amount) => {
       assignedUserIds: [paidTo]
     }]
   });
+
+  await invalidateGroupDebtsCache(groupId);
 
   return settlementExpense;
 };

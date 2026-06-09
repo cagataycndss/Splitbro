@@ -1,6 +1,20 @@
 import ApiError from '../utils/ApiError.js';
 import Expense from '../models/Expense.js';
 import Group from '../models/Group.js';
+import { invalidateGroupDebtsCache } from './groupService.js';
+// Çağatay Candaş – Redis Borç Hesaplama Cache
+import redisClient from '../config/redis.js';
+
+// Çağatay Candaş – Gider borç cache invalidation yardımcı fonksiyonu
+const invalidateExpenseDebtsCache = async (expenseId) => {
+  try {
+    if (redisClient.isOpen) {
+      await redisClient.del(`expense:${expenseId}:debts`);
+    }
+  } catch (err) {
+    console.error('[Çağatay] Redis Expense Debts Cache Invalidation Error:', err);
+  }
+};
 
 export const createManualExpenseService = async (groupId, paidById, expenseData) => {
   const group = await Group.findById(groupId);
@@ -14,10 +28,12 @@ export const createManualExpenseService = async (groupId, paidById, expenseData)
     totalAmount: expenseData.totalAmount,
     paidById: paidById,
     groupId: groupId,
-    items: expenseData.items && expenseData.items.length > 0 
-           ? expenseData.items 
-           : [{ name: expenseData.title, price: expenseData.totalAmount, category: 'Manuel', assignedUserIds: expenseData.assignedUserIds || [] }]
+    items: expenseData.items && expenseData.items.length > 0
+      ? expenseData.items
+      : [{ name: expenseData.title, price: expenseData.totalAmount, category: 'Manuel', assignedUserIds: expenseData.assignedUserIds || [] }]
   });
+
+  await invalidateGroupDebtsCache(groupId);
 
   return newExpense;
 };
@@ -26,8 +42,12 @@ export const deleteExpenseService = async (expenseId, requesterId) => {
   const expense = await Expense.findById(expenseId);
   if (!expense) throw new ApiError(404, 'Silinecek gider bulunamadı');
 
-  
+
+  const groupId = expense.groupId;
   await Expense.findByIdAndDelete(expenseId);
+  await invalidateGroupDebtsCache(groupId);
+  // Çağatay Candaş – Gider silindiğinde borç cache'ini invalidate et
+  await invalidateExpenseDebtsCache(expenseId);
   return null;
 };
 
@@ -44,10 +64,10 @@ export const addItemToExpenseService = async (expenseId, itemData) => {
     }
   }
 
-  const currentItemsTotal = isPlaceholderRemoved 
-    ? 0 
+  const currentItemsTotal = isPlaceholderRemoved
+    ? 0
     : expense.items.reduce((sum, item) => sum + item.price, 0);
-  
+
   const newTotal = currentItemsTotal + Number(itemData.price);
   if (newTotal > expense.totalAmount) {
     const kalan = expense.totalAmount - currentItemsTotal;
@@ -60,6 +80,10 @@ export const addItemToExpenseService = async (expenseId, itemData) => {
     { new: true, runValidators: true }
   );
 
+  await invalidateGroupDebtsCache(expense.groupId);
+  // Çağatay Candaş – Ürün eklendiğinde borç cache'ini invalidate et
+  await invalidateExpenseDebtsCache(expenseId);
+
   return updatedExpense;
 };
 
@@ -71,6 +95,11 @@ export const deleteItemFromExpenseService = async (expenseId, itemId) => {
   );
 
   if (!updatedExpense) throw new ApiError(404, 'Gider bulunamadı veya silinemedi.');
+
+  await invalidateGroupDebtsCache(updatedExpense.groupId);
+  // Çağatay Candaş – Ürün silindiğinde borç cache'ini invalidate et
+  await invalidateExpenseDebtsCache(expenseId);
+
   return updatedExpense;
 };
 
@@ -82,36 +111,70 @@ export const splitExpenseItemService = async (expenseId, itemId, assignedUserIds
   );
 
   if (!updatedExpense) throw new ApiError(404, 'Gider veya ürün bulunamadı');
+
+  await invalidateGroupDebtsCache(updatedExpense.groupId);
+  // Çağatay Candaş – Ürün paylaştırıldığında borç cache'ini invalidate et
+  await invalidateExpenseDebtsCache(expenseId);
+
   return updatedExpense;
 };
 
-export const calculateDebtsForExpense = (expense) => {
-    const creditorId = expense.paidById.toString();
-    const debtMap = new Map();
+// Çağatay Candaş – Redis Cache ile Otomatik Borç Hesaplama
+export const calculateDebtsForExpense = async (expenseId) => {
+  const cacheKey = `expense:${expenseId}:debts`;
 
-    expense.items.forEach(item => {
-        const usersCount = item.assignedUserIds.length;
-        if (usersCount === 0) return;
+  // Redis'ten cache kontrolü
+  try {
+    if (redisClient.isOpen) {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        return { debts: parsed, cached: true };
+      }
+    }
+  } catch (err) {
+    console.error('[Çağatay] Redis Expense Debts Get Error:', err);
+  }
 
-        const splitAmount = item.price / usersCount;
+  // DB'den gider verisini çek ve hesapla
+  const expense = await Expense.findById(expenseId);
+  if (!expense) throw new ApiError(404, 'Gider bulunamadı');
 
-        item.assignedUserIds.forEach(userIdObj => {
-            const debtorId = userIdObj.toString();
-            if (debtorId === creditorId) return;
+  const creditorId = expense.paidById.toString();
+  const debtMap = new Map();
 
-            const currentDebt = debtMap.get(debtorId) || 0;
-            debtMap.set(debtorId, currentDebt + splitAmount);
-        });
+  expense.items.forEach(item => {
+    const usersCount = item.assignedUserIds.length;
+    if (usersCount === 0) return;
+
+    const splitAmount = item.price / usersCount;
+
+    item.assignedUserIds.forEach(userIdObj => {
+      const debtorId = userIdObj.toString();
+      if (debtorId === creditorId) return;
+
+      const currentDebt = debtMap.get(debtorId) || 0;
+      debtMap.set(debtorId, currentDebt + splitAmount);
     });
+  });
 
-    const results = [];
-    debtMap.forEach((amount, debtorId) => {
-        results.push({
-            debtorId: debtorId,
-            creditorId: creditorId,
-            amount: parseFloat(amount.toFixed(2)) 
-        });
+  const results = [];
+  debtMap.forEach((amount, debtorId) => {
+    results.push({
+      debtorId: debtorId,
+      creditorId: creditorId,
+      amount: parseFloat(amount.toFixed(2))
     });
+  });
 
-    return results;
+  // Redis'e cache'le (30 dakika = 1800 saniye)
+  try {
+    if (redisClient.isOpen) {
+      await redisClient.set(cacheKey, JSON.stringify(results), { EX: 1800 });
+    }
+  } catch (err) {
+    console.error('[Çağatay] Redis Expense Debts Set Error:', err);
+  }
+
+  return { debts: results, cached: false };
 };
