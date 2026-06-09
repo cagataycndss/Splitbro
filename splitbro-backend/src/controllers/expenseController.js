@@ -48,12 +48,8 @@ export const splitExpenseItem = catchAsync(async (req, res) => {
     res.status(200).json({ status: 'success', message: "Ürün başarıyla paylaştırıldı", data: updatedExpense });
 });
 
+// Çağatay Candaş – Redis Cache ile Otomatik Borç Hesaplama
 export const calculateDebts = catchAsync(async (req, res) => {
-    const expense = await Expense.findById(req.params.expenseId);
-    if (!expense) {
-        return res.status(404).json({ message: "Gider bulunamadı" });
-    }
-
-    const calculatedDebts = expenseService.calculateDebtsForExpense(expense);
-    res.status(200).json({ status: 'success', data: calculatedDebts });
+    const { debts, cached } = await expenseService.calculateDebtsForExpense(req.params.expenseId);
+    res.status(200).json({ status: 'success', cached: cached || false, data: debts });
 });

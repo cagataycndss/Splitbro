@@ -5,9 +5,21 @@ import routes from './routes/index.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
+import { connectRedis } from './config/redis.js';
+import { connectRabbitMQ } from './config/rabbitmq.js';
+import { startAiWorker } from './workers/aiWorker.js';
+// Furkan Kasalak – AI Fiyat Doğrulama Worker
+import { startPriceVerificationWorker } from './workers/priceVerificationWorker.js';
+// Gökdeniz Erten – AI Fiş Okuma Worker
+import { startReceiptScanWorker } from './workers/receiptScanWorker.js';
 
 connectDB();
-
+connectRedis();
+connectRabbitMQ().then(() => {
+  startAiWorker();
+  startPriceVerificationWorker();
+  startReceiptScanWorker();
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

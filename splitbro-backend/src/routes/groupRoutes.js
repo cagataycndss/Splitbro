@@ -27,12 +27,18 @@ router
 router.post('/:groupId/members/guest', groupController.addGuest);
 
 router
+  .route('/:groupId/members/guest')
+  .post(groupController.addGuestMember);
+
+router
   .route('/:groupId/members/:userId')
   .delete(groupController.removeMember);
 
 
 router.post('/:groupId/expenses', expenseController.createManualExpense);
 router.post('/:groupId/expenses/scan', upload.single('receipt'), groupController.scanAndAddExpense);
+// Gökdeniz Erten – Fiş okuma durumu sorgulama
+router.get('/:groupId/expenses/scan/:jobId', groupController.getScanStatus);
 router.get('/:groupId/calculate', groupController.calculateGroupDebts);
 router.post('/:groupId/settle', groupController.settleDebt);
 
