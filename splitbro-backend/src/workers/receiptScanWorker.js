@@ -24,7 +24,7 @@ export const startReceiptScanWorker = async () => {
           if (!group) {
             throw new Error('Grup bulunamadı! İşlem iptal edildi.');
           }
-
+          
           const aiResult = await scanReceiptWithAI(imageData);
 
           if (!aiResult.success) {
