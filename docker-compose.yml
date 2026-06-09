@@ -10,6 +10,22 @@ services:
       - mongodb_data:/data/db
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: splitbro_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: splitbro_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+
+
   backend:
     build:
       context: ./splitbro-backend
@@ -18,11 +34,13 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
-      - MONGO_URI=mongodb://mongodb:27017/splitbro
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
     env_file:
       - ./splitbro-backend/.env
     depends_on:
-      - mongodb
+      - redis
+      - rabbitmq
 
     restart: unless-stopped
 
@@ -32,6 +50,16 @@ services:
     container_name: splitbro_frontend
     ports:
       - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  mobile:
+    build:
+      context: ./splitbro-mobile
+    container_name: splitbro_mobile
+    ports:
+      - "8080:80"
     depends_on:
       - backend
     restart: unless-stopped
