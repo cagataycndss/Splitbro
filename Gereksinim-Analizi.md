@@ -100,12 +100,7 @@
     - **API Metodu:** `POST /groups/{groupId}/expenses/scan`
     - **Açıklama:** Yüklenen fiş/fatura görüntüsündeki verileri yapay zeka (OCR) ile okuyup, kalem kalem ürün adı ve fiyatlarını ayrıştırarak otomatik gider kaydı oluşturur.
 
-
-27. **Çoklu Para Birimi Desteği (Multi-Currency)** (Gökdeniz Erten)
-    - **API Metodu:** `POST /groups/{groupId}/expenses` (currency alanı)
-    - **Açıklama:** Gider oluştururken TRY, USD, EUR, GBP gibi farklı para birimleri seçilebilir. Borç hesaplamaları para birimine göre ayrı ayrı yapılır.
-
-28. **Gruba Misafir (Kayıtsız) Üye Ekleme** (Gökdeniz Erten)
+26. **Gruba Misafir (Kayıtsız) Üye Ekleme** (Gökdeniz Erten)
     - **API Metodu:** `POST /groups/{groupId}/members/guest`
     - **Açıklama:** Sisteme kayıtlı olmayan kişilerin sadece isim girilerek gruba misafir olarak eklenmesini sağlar. Misafirler veritabanında ayrı bir kullanıcı oluşturmadan grubun içinde tutulur.
 
