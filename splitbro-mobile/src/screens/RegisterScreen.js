@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  ScrollView,
 } from "react-native";
 import client from "../api/client";
 import { AuthContext } from "../context/AuthContext";
@@ -69,6 +70,7 @@ export default function RegisterScreen({ navigation }) {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
       <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={["#10b981", "#059669"]}
@@ -166,30 +168,7 @@ export default function RegisterScreen({ navigation }) {
           </LinearGradient>
         </TouchableOpacity>
 
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>VEYA</Text>
-          <View style={styles.divider} />
-        </View>
 
-        <TouchableOpacity
-          style={styles.googleButton}
-          activeOpacity={0.7}
-          onPress={() => {
-            Alert.alert(
-              "Google ile Kayıt",
-              "Mobil uygulama için Google Client ID (Android/iOS) yapılandırması gereklidir. Firebase veya Google Cloud üzerinden ID aldıktan sonra aktif edilebilir.",
-            );
-          }}
-        >
-          <Ionicons
-            name="logo-google"
-            size={20}
-            color="#ea4335"
-            style={{ marginRight: 12 }}
-          />
-          <Text style={styles.googleButtonText}>Google ile Kayıt Ol</Text>
-        </TouchableOpacity>
 
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Zaten hesabın var mı? </Text>
@@ -198,6 +177,7 @@ export default function RegisterScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -334,7 +314,7 @@ const styles = StyleSheet.create({
   loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: "auto",
+    marginTop: 30,
     marginBottom: 40,
   },
   loginText: {

@@ -31,13 +31,16 @@ export const startReceiptScanWorker = async () => {
             throw new Error('Fiş/Fatura okunurken bir hata oluştu.');
           }
 
-          const { title, amount, confidenceScore, ocrText } = aiResult.extractedData;
+          const { title, amount, confidenceScore, items, ocrText } = aiResult.extractedData;
 
           const newExpense = await Expense.create({
             title,
             totalAmount: amount,
             paidById: paidById,
             groupId: groupId,
+            items: items && items.length > 0 
+                   ? items.map(item => ({ name: item.name, price: item.price, category: 'AI Taraması', assignedUserIds: [] })) 
+                   : [{ name: title, price: amount, category: 'AI Taraması', assignedUserIds: [] }],
             receiptData: {
               imageUrl: imageData.startsWith('data:') ? '[base64-image]' : imageData,
               confidenceScore,
