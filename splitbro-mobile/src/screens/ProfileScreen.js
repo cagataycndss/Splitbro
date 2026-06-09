@@ -76,7 +76,7 @@ export default function ProfileScreen() {
   const handleChangePassword = async () => {
     try {
       await client.put(`/users/${userId}/change-password`, {
-        currentPassword: oldPassword,
+        oldPassword,
         newPassword,
       });
       Alert.alert("Başarılı", "Şifreniz güncellendi.");
@@ -99,7 +99,7 @@ export default function ProfileScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,

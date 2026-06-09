@@ -100,9 +100,6 @@
     - **API Metodu:** `POST /groups/{groupId}/expenses/scan`
     - **Açıklama:** Yüklenen fiş/fatura görüntüsündeki verileri yapay zeka (OCR) ile okuyup, kalem kalem ürün adı ve fiyatlarını ayrıştırarak otomatik gider kaydı oluşturur.
 
-26. **Google ile Sosyal Giriş (OAuth 2.0)** (Gökdeniz Erten)
-    - **API Metodu:** `POST /auth/google`
-    - **Açıklama:** Kullanıcıların Google hesaplarıyla tek tıkla giriş yapmasını veya otomatik kayıt olmasını sağlar. Google'dan alınan `idToken` backend tarafından doğrulanır.
 
 27. **Çoklu Para Birimi Desteği (Multi-Currency)** (Gökdeniz Erten)
     - **API Metodu:** `POST /groups/{groupId}/expenses` (currency alanı)
@@ -112,9 +109,7 @@
     - **API Metodu:** `POST /groups/{groupId}/members/guest`
     - **Açıklama:** Sisteme kayıtlı olmayan kişilerin sadece isim girilerek gruba misafir olarak eklenmesini sağlar. Misafirler veritabanında ayrı bir kullanıcı oluşturmadan grubun içinde tutulur.
 
-29. **Grup Borç Optimizasyonu ve Hesaplaşma** (Gökdeniz Erten)
-    - **API Metodu:** `GET /groups/{groupId}/calculate` & `POST /groups/{groupId}/settle`
-    - **Açıklama:** Gruptaki tüm giderleri analiz ederek kimin kime ne kadar borçlu olduğunu optimize bir şekilde hesaplar. Borç kapatma işlemi de bu endpoint üzerinden yapılır.
+
 
 # Gereksinim Dağılımları
 

@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  ScrollView,
 } from "react-native";
 import client from "../api/client";
 import { AuthContext } from "../context/AuthContext";
@@ -54,6 +55,7 @@ export default function LoginScreen({ navigation }) {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
       <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={["#4f46e5", "#3b82f6"]}
@@ -135,30 +137,7 @@ export default function LoginScreen({ navigation }) {
           </LinearGradient>
         </TouchableOpacity>
 
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>VEYA</Text>
-          <View style={styles.divider} />
-        </View>
 
-        <TouchableOpacity
-          style={styles.googleButton}
-          activeOpacity={0.7}
-          onPress={() => {
-            Alert.alert(
-              "Google ile Giriş",
-              "Mobil uygulama için Google Client ID (Android/iOS) yapılandırması gereklidir. Firebase veya Google Cloud üzerinden ID aldıktan sonra aktif edilebilir.",
-            );
-          }}
-        >
-          <Ionicons
-            name="logo-google"
-            size={20}
-            color="#ea4335"
-            style={{ marginRight: 12 }}
-          />
-          <Text style={styles.googleButtonText}>Google ile Giriş Yap</Text>
-        </TouchableOpacity>
 
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Hesabın yok mu? </Text>
@@ -167,6 +146,7 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -303,7 +283,7 @@ const styles = StyleSheet.create({
   registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: "auto",
+    marginTop: 30,
     marginBottom: 40,
   },
   registerText: {

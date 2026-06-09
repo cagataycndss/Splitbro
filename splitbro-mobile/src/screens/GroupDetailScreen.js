@@ -188,7 +188,7 @@ export default function GroupDetailScreen({ route, navigation }) {
               }
               try {
                 const result = await ImagePicker.launchCameraAsync({
-                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  mediaTypes: ['images'],
                   quality: 0.2,
                 });
                 if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -209,7 +209,7 @@ export default function GroupDetailScreen({ route, navigation }) {
               }
               try {
                 const result = await ImagePicker.launchImageLibraryAsync({
-                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  mediaTypes: ['images'],
                   quality: 0.2,
                 });
                 if (!result.canceled && result.assets && result.assets.length > 0) {
