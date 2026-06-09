@@ -1,0 +1,40 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'splitbro-backend/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'splitbro-backend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./splitbro-backend
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: './splitbro-backend/package-lock.json'
+    
+    - name: Install dependencies
+      run: npm ci
+
+    # Uncomment the line below when tests are added to the project
+    # - name: Run tests
+    #   run: npm test
