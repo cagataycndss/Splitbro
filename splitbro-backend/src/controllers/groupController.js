@@ -1,4 +1,7 @@
 import * as groupService from '../services/groupService.js';
+import AiJob from '../models/AiJob.js';
+import { publishMessage } from '../config/rabbitmq.js';
+import { scanReceiptWithAI } from '../services/aiScannerService.js';
 
 const catchAsync = (fn) => {
   return (req, res, next) => {
@@ -48,6 +51,26 @@ export const addMember = catchAsync(async (req, res, next) => {
   });
 });
 
+export const addGuestMember = catchAsync(async (req, res, next) => {
+  const { groupId } = req.params;
+  const { guestName } = req.body; 
+  const requesterId = req.user._id;
+
+  if (!guestName) {
+    return next(new ApiError(400, 'Lütfen misafir adını girin.'));
+  }
+
+  const updatedGroup = await groupService.addGuestMemberService(groupId, guestName, requesterId);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Misafir başarıyla eklendi.',
+    data: {
+      groupMembers: updatedGroup.members,
+    },
+  });
+});
+
 export const deleteGroup = catchAsync(async (req, res, next) => {
   await groupService.deleteGroupService(req.group);
 
@@ -62,11 +85,12 @@ export const getMembers = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
   const requesterId = req.user._id;
   
-  const members = await groupService.getMembersService(groupId, requesterId);
+  const { members, cached } = await groupService.getMembersService(groupId, requesterId);
 
   res.status(200).json({
     status: 'success',
     results: members.length,
+    cached: cached || false,
     data: {
       members,
     },
@@ -87,29 +111,85 @@ export const removeMember = catchAsync(async (req, res, next) => {
 });
 
 
+// Gökdeniz Erten – AI Fiş Okuma (RabbitMQ Asenkron)
 export const scanAndAddExpense = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
   const paidById = req.user._id; 
 
-  let imageUrl;
+  let imageData;
   if (req.file) {
     const base64Image = req.file.buffer.toString('base64');
-    imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+    imageData = `data:${req.file.mimetype};base64,${base64Image}`;
   } else if (req.body.imageUrl) {
-    imageUrl = req.body.imageUrl;
+    imageData = req.body.imageUrl;
   } else {
     return res.status(400).json({ message: 'Lütfen bir fiş/fatura resmi yükleyin veya URL girin.' });
   }
 
-  const expense = await groupService.createExpenseViaAIScannerService(groupId, paidById, imageUrl);
-
-  res.status(201).json({
-    status: 'success',
-    message: 'Fiş Yapay Zeka (OCR) tarafından okundu ve sisteme Gider olarak işlendi.',
-    data: {
-      expense,
-    },
+  // 1. Job oluştur
+  const job = await AiJob.create({
+    type: 'receipt_scan',
+    groupId: groupId,
+    paidById: paidById,
+    imageData: imageData.substring(0, 100) + '...' // Sadece referans kaydet, tam veri kuyruğa gider
   });
+
+  // 2. RabbitMQ'ya mesaj gönder veya Direct Fallback uygula
+  try {
+    await publishMessage('ai_receipt_scan_queue', {
+      jobId: job._id,
+      groupId: groupId,
+      paidById: paidById,
+      imageData: imageData
+    });
+  } catch (error) {
+    console.warn('[Gökdeniz] RabbitMQ is not available for receipt scan, falling back to direct processing...', error.message);
+
+    // Direct background processing fallback (non-blocking)
+    (async () => {
+      try {
+        await AiJob.findByIdAndUpdate(job._id, { status: 'processing' });
+        
+        const expense = await groupService.createExpenseViaAIScannerService(groupId, paidById, imageData);
+        
+        await AiJob.findByIdAndUpdate(job._id, {
+          status: 'completed',
+          result: {
+            expenseId: expense._id,
+            title: expense.title,
+            totalAmount: expense.totalAmount
+          }
+        });
+        console.log(`[Gökdeniz] Direct Receipt Scan Job ${job._id} completed successfully.`);
+      } catch (err) {
+        console.error('[Gökdeniz] Direct Receipt Scan Fallback Error:', err);
+        await AiJob.findByIdAndUpdate(job._id, {
+          status: 'failed',
+          error: err.message || 'Bilinmeyen bir hata oluştu'
+        });
+      }
+    })();
+  }
+
+  // 3. İstemciye Job ID dön
+  res.status(202).json({
+    status: 'success',
+    message: 'Fiş okuma işlemi sıraya alındı. Yapay zeka analiz ediyor...',
+    jobId: job._id
+  });
+});
+
+
+// Gökdeniz Erten – Fiş Okuma Durumu Sorgulama
+export const getScanStatus = catchAsync(async (req, res, next) => {
+  const { jobId } = req.params;
+  const job = await AiJob.findById(jobId);
+
+  if (!job) {
+    return res.status(404).json({ status: 'fail', message: 'İşlem bulunamadı' });
+  }
+
+  res.status(200).json({ status: 'success', data: job });
 });
 
 
