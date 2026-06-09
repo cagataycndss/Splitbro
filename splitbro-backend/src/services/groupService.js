@@ -266,44 +266,12 @@ export const calculateGroupDebtsService = async (groupId) => {
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   const expenses = await Expense.find({ groupId });
-  const debtMap = new Map(); 
-
-  expenses.forEach(expense => {
-      const creditorId = expense.paidById.toString();
-      
-      expense.items.forEach(item => {
-          let targetUserIds = item.assignedUserIds;
-          
-          // Eğer ürüne kimse atanmadıysa (örneğin fiş yeni eklendiğinde),
-          // varsayılan olarak grubun tüm üyelerine eşit bölüştürülür.
-          if (!targetUserIds || targetUserIds.length === 0) {
-              targetUserIds = group.members.map(m => m.user);
-          }
-          
-          const usersCount = targetUserIds.length;
-          if (usersCount === 0) return;
-          const splitAmount = item.price / usersCount;
-          
-          targetUserIds.forEach(userIdObj => {
-              const debtorId = userIdObj.toString();
-              if (debtorId === creditorId) return;
-
-              const cBal = debtMap.get(creditorId) || 0;
-              debtMap.set(creditorId, cBal + splitAmount);
-
-              const dBal = debtMap.get(debtorId) || 0;
-              debtMap.set(debtorId, dBal - splitAmount);
-          });
-      });
-  });
-
-
-  let debtors = []; 
-  let creditors = []; 
   
-  debtMap.forEach((balance, userId) => {
-      if (balance > 0.01) creditors.push({ userId, balance });
-      else if (balance < -0.01) debtors.push({ userId, balance: Math.abs(balance) });
+  const groupedExpenses = {};
+  expenses.forEach(exp => {
+    const curr = exp.currency || 'TRY';
+    if (!groupedExpenses[curr]) groupedExpenses[curr] = [];
+    groupedExpenses[curr].push(exp);
   });
 
   const allSettlements = [];
@@ -312,14 +280,29 @@ export const calculateGroupDebtsService = async (groupId) => {
     const debtMap = new Map(); 
 
     currExpenses.forEach(expense => {
+        if (!expense.paidById) {
+          console.warn(`[Warning] Expense ${expense._id} has no paidById. Skipping in debt calculation.`);
+          return;
+        }
         const creditorId = expense.paidById.toString();
         
         expense.items.forEach(item => {
-            const usersCount = item.assignedUserIds.length;
+            let targetUserIds = item.assignedUserIds;
+            
+            // Eğer ürüne kimse atanmadıysa, varsayılan olarak grubun tüm üyelerine eşit bölüştürülür.
+            if (!targetUserIds || targetUserIds.length === 0) {
+                targetUserIds = group.members.map(m => m.user);
+            }
+            
+            // Remove nulls from targetUserIds
+            targetUserIds = targetUserIds.filter(id => id != null);
+
+            const usersCount = targetUserIds.length;
             if (usersCount === 0) return;
             const splitAmount = item.price / usersCount;
             
-            item.assignedUserIds.forEach(userIdObj => {
+            targetUserIds.forEach(userIdObj => {
+                if (!userIdObj) return;
                 const debtorId = userIdObj.toString();
                 if (debtorId === creditorId) return;
 
@@ -369,14 +352,13 @@ export const calculateGroupDebtsService = async (groupId) => {
 
   try {
     if (redisClient.isOpen) {
-      // 1 saat (3600 sn) boyunca önbellekte tut
-      await redisClient.set(cacheKey, JSON.stringify(settlements), { EX: 3600 });
+      await redisClient.set(cacheKey, JSON.stringify(allSettlements), { EX: 3600 });
     }
   } catch (err) {
     console.error('Redis Set Error:', err);
   }
 
-  return settlements;
+  return allSettlements;
 };
 
 
