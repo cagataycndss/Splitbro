@@ -10,7 +10,7 @@ export const startReceiptScanWorker = async () => {
     const channel = getChannel();
     const queue = 'ai_receipt_scan_queue';
 
-    console.log(`[Gökdeniz] Receipt Scan Worker listening to queue: ${queue}`);
+    console.log(`Receipt Scan Worker listening to queue: ${queue}`);
 
     channel.consume(queue, async (msg) => {
       if (msg !== null) {
