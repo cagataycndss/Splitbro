@@ -10,6 +10,19 @@ pipeline {
 
         stage('Build and Deploy') {
             steps {
+                script {
+                    // Create splitbro-backend/.env
+                    writeFile file: 'splitbro-backend/.env', text: '''PORT=5000
+NODE_ENV=development
+MONGO_URI=mongodb+srv://cagataycandas40_db_user:lBdg0erpMaKp0vr6@splitbro.dlapv16.mongodb.net/?appName=splitbro
+JWT_SECRET=splitbro_super_secret_key_12345
+GEMINI_API_KEY=AIzaSyCl7OfiqX2Q5GOYLMSChu7RUjB2iJxUVug
+REDIS_URL=redis://127.0.0.1:6379
+RABBITMQ_URL=amqp://127.0.0.1:5672'''
+
+                    // Create splitbro-mobile/.env
+                    writeFile file: 'splitbro-mobile/.env', text: '''EXPO_PUBLIC_API_URL=http://192.168.1.34:5000/api'''
+                }
                 sh 'docker compose down'
                 sh 'docker compose up -d --build'
             }
