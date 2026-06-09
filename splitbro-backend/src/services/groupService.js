@@ -66,8 +66,8 @@ export const addMemberService = async (groupId, email, requesterId, role = 'memb
   }
 
   const isUserExist = await User.findOne({ email });
-  if (!isUserExist) throw new ApiError(404, 'Eklenecek e-posta adresine sahip bir kullanıcı sistemde bulunamadı.');
-
+  if(!isUserExist) throw new ApiError(404, 'Eklenecek e-posta adresine sahip bir kullanıcı sistemde bulunamadı.');
+  
   const newMemberId = isUserExist._id;
 
   const isDuplicate = group.members.some(
@@ -149,7 +149,7 @@ export const getMembersService = async (groupId, requesterId) => {
     const memberUserId = member.user?._id || member.user;
     return memberUserId?.toString() === requesterId.toString();
   });
-
+  
   if (!isRequesterMember) {
     throw new ApiError(403, 'Grup üyelerini görüntüleme yetkisine sahip değilsiniz.');
   }
@@ -188,7 +188,7 @@ export const removeMemberService = async (groupId, memberIdToRemove, requesterId
   });
 
   if (group.members.length === initialMemberCount) {
-    throw new ApiError(400, 'Kullanıcı zaten grupta yok veya çıkartılamadı!');
+    throw new ApiError(400, 'Kullanıcı zaten grupta yok veya çıkartılamadı!'); 
   }
 
   await group.save();
@@ -203,7 +203,7 @@ export const createExpenseViaAIScannerService = async (groupId, paidById, imageU
 
   const aiResult = await scanReceiptWithAI(imageUrl);
 
-  if (!aiResult.success) {
+  if(!aiResult.success) {
     throw new ApiError(500, 'Fiş/Fatura okunurken bir hata oluştu.');
   }
 
@@ -240,9 +240,9 @@ export const getGroupDetailsService = async (groupId, requesterId) => {
   }
 
   const expenses = await Expense.find({ groupId: group._id })
-    .populate('paidById', 'firstName lastName avatar')
-    .populate('items.assignedUserIds', 'firstName lastName avatar')
-    .sort({ createdAt: -1 });
+      .populate('paidById', 'firstName lastName avatar')
+      .populate('items.assignedUserIds', 'firstName lastName avatar')
+      .sort({ createdAt: -1 });
 
   return {
     group,
@@ -252,7 +252,7 @@ export const getGroupDetailsService = async (groupId, requesterId) => {
 
 export const calculateGroupDebtsService = async (groupId) => {
   const cacheKey = `group:${groupId}:debts`;
-
+  
   try {
     if (redisClient.isOpen) {
       const cachedData = await redisClient.get(cacheKey);
@@ -266,104 +266,104 @@ export const calculateGroupDebtsService = async (groupId) => {
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   const expenses = await Expense.find({ groupId });
-  const debtMap = new Map();
+  const debtMap = new Map(); 
 
   expenses.forEach(expense => {
-    const creditorId = expense.paidById.toString();
+      const creditorId = expense.paidById.toString();
+      
+      expense.items.forEach(item => {
+          let targetUserIds = item.assignedUserIds;
+          
+          // Eğer ürüne kimse atanmadıysa (örneğin fiş yeni eklendiğinde),
+          // varsayılan olarak grubun tüm üyelerine eşit bölüştürülür.
+          if (!targetUserIds || targetUserIds.length === 0) {
+              targetUserIds = group.members.map(m => m.user);
+          }
+          
+          const usersCount = targetUserIds.length;
+          if (usersCount === 0) return;
+          const splitAmount = item.price / usersCount;
+          
+          targetUserIds.forEach(userIdObj => {
+              const debtorId = userIdObj.toString();
+              if (debtorId === creditorId) return;
 
-    expense.items.forEach(item => {
-      let targetUserIds = item.assignedUserIds;
+              const cBal = debtMap.get(creditorId) || 0;
+              debtMap.set(creditorId, cBal + splitAmount);
 
-      // Eğer ürüne kimse atanmadıysa (örneğin fiş yeni eklendiğinde),
-      // varsayılan olarak grubun tüm üyelerine eşit bölüştürülür.
-      if (!targetUserIds || targetUserIds.length === 0) {
-        targetUserIds = group.members.map(m => m.user);
-      }
-
-      const usersCount = targetUserIds.length;
-      if (usersCount === 0) return;
-      const splitAmount = item.price / usersCount;
-
-      targetUserIds.forEach(userIdObj => {
-        const debtorId = userIdObj.toString();
-        if (debtorId === creditorId) return;
-
-        const cBal = debtMap.get(creditorId) || 0;
-        debtMap.set(creditorId, cBal + splitAmount);
-
-        const dBal = debtMap.get(debtorId) || 0;
-        debtMap.set(debtorId, dBal - splitAmount);
+              const dBal = debtMap.get(debtorId) || 0;
+              debtMap.set(debtorId, dBal - splitAmount);
+          });
       });
-    });
   });
 
 
-  let debtors = [];
-  let creditors = [];
-
+  let debtors = []; 
+  let creditors = []; 
+  
   debtMap.forEach((balance, userId) => {
-    if (balance > 0.01) creditors.push({ userId, balance });
-    else if (balance < -0.01) debtors.push({ userId, balance: Math.abs(balance) });
+      if (balance > 0.01) creditors.push({ userId, balance });
+      else if (balance < -0.01) debtors.push({ userId, balance: Math.abs(balance) });
   });
 
   const allSettlements = [];
 
   for (const [currency, currExpenses] of Object.entries(groupedExpenses)) {
-    const debtMap = new Map();
+    const debtMap = new Map(); 
 
     currExpenses.forEach(expense => {
-      const creditorId = expense.paidById.toString();
+        const creditorId = expense.paidById.toString();
+        
+        expense.items.forEach(item => {
+            const usersCount = item.assignedUserIds.length;
+            if (usersCount === 0) return;
+            const splitAmount = item.price / usersCount;
+            
+            item.assignedUserIds.forEach(userIdObj => {
+                const debtorId = userIdObj.toString();
+                if (debtorId === creditorId) return;
 
-      expense.items.forEach(item => {
-        const usersCount = item.assignedUserIds.length;
-        if (usersCount === 0) return;
-        const splitAmount = item.price / usersCount;
+                const cBal = debtMap.get(creditorId) || 0;
+                debtMap.set(creditorId, cBal + splitAmount);
 
-        item.assignedUserIds.forEach(userIdObj => {
-          const debtorId = userIdObj.toString();
-          if (debtorId === creditorId) return;
-
-          const cBal = debtMap.get(creditorId) || 0;
-          debtMap.set(creditorId, cBal + splitAmount);
-
-          const dBal = debtMap.get(debtorId) || 0;
-          debtMap.set(debtorId, dBal - splitAmount);
+                const dBal = debtMap.get(debtorId) || 0;
+                debtMap.set(debtorId, dBal - splitAmount);
+            });
         });
-      });
     });
 
-    let debtors = [];
-    let creditors = [];
-
+    let debtors = []; 
+    let creditors = []; 
+    
     debtMap.forEach((balance, userId) => {
-      if (balance > 0.01) creditors.push({ userId, balance });
-      else if (balance < -0.01) debtors.push({ userId, balance: Math.abs(balance) });
+        if (balance > 0.01) creditors.push({ userId, balance });
+        else if (balance < -0.01) debtors.push({ userId, balance: Math.abs(balance) });
     });
 
-    debtors.sort((a, b) => b.balance - a.balance);
-    creditors.sort((a, b) => b.balance - a.balance);
+    debtors.sort((a,b) => b.balance - a.balance);
+    creditors.sort((a,b) => b.balance - a.balance);
 
     let d = 0;
     let c = 0;
 
-    while (d < debtors.length && c < creditors.length) {
-      const debtor = debtors[d];
-      const creditor = creditors[c];
-
-      const minAmount = Math.min(debtor.balance, creditor.balance);
-
-      allSettlements.push({
-        from: debtor.userId,
-        to: creditor.userId,
-        amount: parseFloat(minAmount.toFixed(2)),
-        currency: currency
-      });
-
-      debtor.balance -= minAmount;
-      creditor.balance -= minAmount;
-
-      if (debtor.balance < 0.01) d++;
-      if (creditor.balance < 0.01) c++;
+    while(d < debtors.length && c < creditors.length) {
+        const debtor = debtors[d];
+        const creditor = creditors[c];
+        
+        const minAmount = Math.min(debtor.balance, creditor.balance);
+        
+        allSettlements.push({
+            from: debtor.userId,
+            to: creditor.userId,
+            amount: parseFloat(minAmount.toFixed(2)),
+            currency: currency
+        });
+        
+        debtor.balance -= minAmount;
+        creditor.balance -= minAmount;
+        
+        if (debtor.balance < 0.01) d++;
+        if (creditor.balance < 0.01) c++;
     }
   }
 
