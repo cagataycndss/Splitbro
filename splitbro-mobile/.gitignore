@@ -5,6 +5,10 @@ node_modules/
 
 # Expo
 .expo/
+<<<<<<< HEAD
+=======
+.claude/
+>>>>>>> fa715b9 (mobile dosyaları eklendi)
 dist/
 web-build/
 expo-env.d.ts
