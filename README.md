@@ -6,7 +6,7 @@
 
 ## Proje Tanımı
 
-Splitbro, günlük hayatta sıkça yaşanan “hesabı kim ödedi, kim ne aldı, bana ne düştü?” karmaşasını ortadan kaldırmak için geliştirilmiştir. Kullanıcılar uygulama üzerinden fişin fotoğrafını çeker, yapay zekâ destekli sistem fişteki ürünleri otomatik olarak tanır. Ardından kullanıcılar hangi ürünü kimin aldığını işaretler ve uygulama tüm hesaplamaları otomatik olarak yapar. Web ve mobil platformlarda çalışacak şekilde tasarlanan Splitbro, kullanıcı dostu arayüzü ve hızlı işlem adımları sayesinde ortak harcamaları zahmetsiz ve şeffaf bir şekilde yönetmeyi amaçlar.
+Splitbro, günlük hayatta sıkça yaşanan "hesabı kim ödedi, kim ne aldı, bana ne düştü?" karmaşasını ortadan kaldırmak için geliştirilmiştir. Kullanıcılar uygulama üzerinden fişin fotoğrafını çeker, yapay zekâ destekli sistem fişteki ürünleri kalem kalem otomatik olarak tanır ve ayrıştırır. Ardından kullanıcılar hangi ürünü kimin aldığını işaretler ve uygulama tüm hesaplamaları otomatik olarak yapar. Google ile tek tıkla giriş, çoklu para birimi desteği (TRY, USD, EUR, GBP), kayıtsız misafir üye ekleme ve optimize borç hesaplaşma gibi gelişmiş özellikler sunan Splitbro, web ve mobil platformlarda çalışacak şekilde tasarlanmıştır.
 
 ---
 

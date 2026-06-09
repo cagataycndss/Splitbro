@@ -20,12 +20,13 @@ export const createManualExpenseService = async (groupId, paidById, expenseData)
   const group = await Group.findById(groupId);
   if (!group) throw new ApiError(404, 'Grup bulunamadı!');
 
-  const isMember = group.members.some(m => m.user.toString() === paidById.toString());
+  const isMember = group.members.some(m => m.user?._id?.toString() === paidById.toString() || m.user?.toString() === paidById.toString() || m._id.toString() === paidById.toString());
   if (!isMember) throw new ApiError(403, 'Gider eklemek için grubun üyesi olmalısınız.');
 
   const newExpense = await Expense.create({
     title: expenseData.title,
     totalAmount: expenseData.totalAmount,
+    currency: expenseData.currency || 'TRY',
     paidById: paidById,
     groupId: groupId,
     items: expenseData.items && expenseData.items.length > 0

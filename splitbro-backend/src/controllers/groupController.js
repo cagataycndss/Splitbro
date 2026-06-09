@@ -214,9 +214,9 @@ export const calculateGroupDebts = catchAsync(async (req, res, next) => {
 
 export const settleDebt = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
-  const { paidBy, paidTo, amount } = req.body;
+  const { paidBy, paidTo, amount, currency } = req.body;
 
-  const settlement = await groupService.settleDebtService(groupId, paidBy, paidTo, amount);
+  const settlement = await groupService.settleDebtService(groupId, paidBy, paidTo, amount, currency);
 
   res.status(201).json({
     status: 'success',
