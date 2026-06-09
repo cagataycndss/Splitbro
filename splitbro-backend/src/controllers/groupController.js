@@ -60,6 +60,15 @@ export const addGuestMember = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Lütfen misafir adını girin.'));
   }
 
+export const addGuestMember = catchAsync(async (req, res, next) => {
+  const { groupId } = req.params;
+  const { guestName } = req.body; 
+  const requesterId = req.user._id;
+
+  if (!guestName) {
+    return next(new ApiError(400, 'Lütfen misafir adını girin.'));
+  }
+
   const updatedGroup = await groupService.addGuestMemberService(groupId, guestName, requesterId);
 
   res.status(200).json({
