@@ -71,7 +71,7 @@ export const addMemberService = async (groupId, email, requesterId, role = 'memb
   const newMemberId = isUserExist._id;
 
   const isDuplicate = group.members.some(
-    (member) => member.user.toString() === newMemberId.toString()
+    (member) => member.user?.toString() === newMemberId.toString()
   );
   if (isDuplicate) throw new ApiError(400, 'Bu kullanıcı zaten grupta üye.');
 
@@ -89,7 +89,7 @@ export const addGuestMemberService = async (groupId, guestName, requesterId) => 
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   const isRequesterMember = group.members.some(
-    (member) => member.user.toString() === requesterId.toString()
+    (member) => member.user?.toString() === requesterId.toString()
   );
   if (!isRequesterMember) {
     throw new ApiError(403, 'Gruba üye eklemek için yetkiniz yok (Grup üyesi değilsiniz).');
