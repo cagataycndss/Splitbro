@@ -159,14 +159,14 @@ export const calculateDebtsForExpense = async (expenseId) => {
     });
   });
 
-    const results = [];
-    debtMap.forEach((amount, debtorId) => {
-        results.push({
-            debtorId: debtorId,
-            creditorId: creditorId,
-            amount: parseFloat(amount.toFixed(2)) 
-        });
+  const results = [];
+  debtMap.forEach((amount, debtorId) => {
+    results.push({
+      debtorId: debtorId,
+      creditorId: creditorId,
+      amount: parseFloat(amount.toFixed(2))
     });
+  });
 
   // Redis'e cache'le (30 dakika = 1800 saniye)
   try {

@@ -113,8 +113,36 @@ export const addGuestMemberService = async (groupId, guestName, requesterId) => 
   return group;
 };
 
-export const addGuestService = async (groupId, guestName, requesterId) => {
-  const group = await Group.findById(groupId);
+// Gökdeniz Erten – Redis Cache ile Grup Üyeleri Listeleme
+export const getMembersService = async (groupId, requesterId) => {
+  const cacheKey = `group:${groupId}:members`;
+
+  // Redis'ten cache kontrolü
+  try {
+    if (redisClient.isOpen) {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        const parsedMembers = JSON.parse(cachedData);
+        // Cache'den geldiğinde de yetki kontrolü yap
+        const isRequesterMember = parsedMembers.some(
+          (member) => {
+            const memberId = member.user?._id || member.user;
+            return memberId?.toString() === requesterId.toString();
+          }
+        );
+        if (!isRequesterMember) {
+          throw new ApiError(403, 'Grup üyelerini görüntüleme yetkisine sahip değilsiniz.');
+        }
+        return { members: parsedMembers, cached: true };
+      }
+    }
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error('[Gökdeniz] Redis Members Get Error:', err);
+  }
+
+  // DB'den çek
+  const group = await Group.findById(groupId).populate('members.user', 'firstName lastName email avatar');
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   const isRequesterMember = group.members.some(
@@ -283,12 +311,44 @@ export const calculateGroupDebtsService = async (groupId) => {
   if (!group) throw new ApiError(404, 'Grup bulunamadı');
 
   const expenses = await Expense.find({ groupId });
-  const groupedExpenses = {};
+  const debtMap = new Map(); 
 
-  expenses.forEach(exp => {
-    const cur = exp.currency || 'TRY';
-    if (!groupedExpenses[cur]) groupedExpenses[cur] = [];
-    groupedExpenses[cur].push(exp);
+  expenses.forEach(expense => {
+      const creditorId = expense.paidById.toString();
+      
+      expense.items.forEach(item => {
+          let targetUserIds = item.assignedUserIds;
+          
+          // Eğer ürüne kimse atanmadıysa (örneğin fiş yeni eklendiğinde),
+          // varsayılan olarak grubun tüm üyelerine eşit bölüştürülür.
+          if (!targetUserIds || targetUserIds.length === 0) {
+              targetUserIds = group.members.map(m => m.user);
+          }
+          
+          const usersCount = targetUserIds.length;
+          if (usersCount === 0) return;
+          const splitAmount = item.price / usersCount;
+          
+          targetUserIds.forEach(userIdObj => {
+              const debtorId = userIdObj.toString();
+              if (debtorId === creditorId) return;
+
+              const cBal = debtMap.get(creditorId) || 0;
+              debtMap.set(creditorId, cBal + splitAmount);
+
+              const dBal = debtMap.get(debtorId) || 0;
+              debtMap.set(debtorId, dBal - splitAmount);
+          });
+      });
+  });
+
+
+  let debtors = []; 
+  let creditors = []; 
+  
+  debtMap.forEach((balance, userId) => {
+      if (balance > 0.01) creditors.push({ userId, balance });
+      else if (balance < -0.01) debtors.push({ userId, balance: Math.abs(balance) });
   });
 
   const allSettlements = [];
@@ -361,7 +421,7 @@ export const calculateGroupDebtsService = async (groupId) => {
     console.error('Redis Set Error:', err);
   }
 
-  return allSettlements;
+  return settlements;
 };
 
 

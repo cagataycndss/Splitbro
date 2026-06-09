@@ -51,18 +51,15 @@ export const addMember = catchAsync(async (req, res, next) => {
   });
 });
 
-<<<<<<< HEAD
-export const addGuest = catchAsync(async (req, res, next) => {
+export const addGuestMember = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
-  const { guestName } = req.body;
+  const { guestName } = req.body; 
   const requesterId = req.user._id;
 
-  if (!guestName || guestName.trim() === '') {
-    return res.status(400).json({ status: 'fail', message: 'Misafir adı gereklidir.' });
+  if (!guestName) {
+    return next(new ApiError(400, 'Lütfen misafir adını girin.'));
   }
 
-  const updatedGroup = await groupService.addGuestService(groupId, guestName, requesterId);
-=======
 export const addGuestMember = catchAsync(async (req, res, next) => {
   const { groupId } = req.params;
   const { guestName } = req.body; 
@@ -73,7 +70,6 @@ export const addGuestMember = catchAsync(async (req, res, next) => {
   }
 
   const updatedGroup = await groupService.addGuestMemberService(groupId, guestName, requesterId);
->>>>>>> 8ab463d (fix)
 
   res.status(200).json({
     status: 'success',
