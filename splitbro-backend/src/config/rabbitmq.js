@@ -11,6 +11,8 @@ export const connectRabbitMQ = async () => {
     console.log('RabbitMQ Connected');
 
     await channel.assertQueue('ai_categorization_queue', { durable: true });
+    
+    await channel.assertQueue('ai_receipt_scan_queue', { durable: true });
   } catch (error) {
     console.error('RabbitMQ Connection Error:', error);
   }
