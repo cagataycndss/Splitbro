@@ -1,0 +1,11 @@
+node_modules
+.expo
+dist
+web-build
+.git
+.gitignore
+*.md
+.env*.local
+.claude
+ios
+android
