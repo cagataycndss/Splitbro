@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
+import { UserPlus, User, Mail, Lock, AlertCircle, Sparkles } from 'lucide-react';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -12,20 +11,8 @@ const Register = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { register, googleLogin } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setIsLoading(true);
-    setError('');
-    const res = await googleLogin(credentialResponse.credential);
-    if (res.success) {
-      navigate('/dashboard');
-    } else {
-      setError(res.message);
-      setIsLoading(false);
-    }
-  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -42,22 +29,66 @@ const Register = () => {
   };
 
   return (
-    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
+    <div className="app-container" style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justify: 'center',
+      minHeight: 'calc(100vh - 4rem)',
+      padding: '1rem'
+    }}>
+      <div className="glass-panel animate-fade-in" style={{ 
+        width: '100%', 
+        maxWidth: '460px', 
+        padding: '2.5rem 2rem',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        
+        {/* Glow Accent Circle */}
+        <div style={{
+          position: 'absolute',
+          top: '-50px',
+          left: '-50px',
+          width: '120px',
+          height: '120px',
+          background: 'var(--accent-color)',
+          filter: 'blur(60px)',
+          opacity: 0.4,
+          borderRadius: '50%',
+          pointerEvents: 'none'
+        }} />
+
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-            <UserPlus size={28} color="var(--primary-color)" />
-            Hesap Oluştur
-          </h2>
-          <p>SplitBro ile masrafları bölüşmeye başla.</p>
+          <div style={{
+            width: '54px', height: '54px', borderRadius: '16px',
+            background: 'var(--accent-gradient)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '1rem',
+            boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)'
+          }}>
+            <UserPlus size={28} color="#ffffff" />
+          </div>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.35rem' }}>
+            Hesap <span className="gradient-text">Oluştur</span>
+          </h1>
+          <p style={{ fontSize: '0.9rem' }}>SplitBro ile grup harcamalarınızı yönetin.</p>
         </div>
 
-        {error && <div style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</div>}
+        {error && (
+          <div className="alert-box alert-danger">
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
 
-        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <div className="input-group" style={{ marginBottom: 0, flex: 1 }}>
-              <label className="input-label">Ad</label>
+        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column' }}>
+          
+          <div className="responsive-name-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="input-group">
+              <label className="input-label">
+                <User size={15} color="var(--primary-color)" /> Ad
+              </label>
               <input 
                 type="text" 
                 className="glass-input" 
@@ -67,8 +98,11 @@ const Register = () => {
                 required
               />
             </div>
-            <div className="input-group" style={{ marginBottom: 0, flex: 1 }}>
-              <label className="input-label">Soyad</label>
+
+            <div className="input-group">
+              <label className="input-label">
+                <User size={15} color="var(--primary-color)" /> Soyad
+              </label>
               <input 
                 type="text" 
                 className="glass-input" 
@@ -81,56 +115,64 @@ const Register = () => {
           </div>
 
           <div className="input-group">
-             <label className="input-label">E-posta Adresi</label>
-             <input 
-               type="email" 
-               className="glass-input" 
-               placeholder="E-postanızı girin"
-               value={email}
-               onChange={(e) => setEmail(e.target.value)}
-               required
-             />
+            <label className="input-label">
+              <Mail size={15} color="var(--primary-color)" /> E-posta Adresi
+            </label>
+            <input 
+              type="email" 
+              className="glass-input" 
+              placeholder="E-postanızı girin"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
           <div className="input-group">
-             <label className="input-label">Şifre</label>
-             <input 
-               type="password" 
-               className="glass-input" 
-               placeholder="En az 6 karakter"
-               value={password}
-               onChange={(e) => setPassword(e.target.value)}
-               required
-             />
+            <label className="input-label">
+              <Lock size={15} color="var(--primary-color)" /> Şifre
+            </label>
+            <input 
+              type="password" 
+              className="glass-input" 
+              placeholder="En az 6 karakter"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={6}
+              required
+            />
           </div>
           
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={isLoading}>
-            {isLoading ? 'Hesap Açılıyor...' : 'Kayıt Ol'}
+          <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: '1rem' }} disabled={isLoading}>
+            <Sparkles size={20} />
+            {isLoading ? 'Hesap Oluşturuluyor...' : 'Kayıt Ol'}
           </button>
         </form>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--surface-border)' }} />
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>veya</span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--surface-border)' }} />
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '2rem', 
+          paddingTop: '1.25rem',
+          borderTop: '1px solid var(--surface-border)',
+          fontSize: '0.9rem', 
+          color: 'var(--text-secondary)' 
+        }}>
+          Zaten hesabınız var mı?{' '}
+          <Link to="/login" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '700' }}>
+            Giriş Yap
+          </Link>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setError('Google ile kayıt yapılırken bir hata oluştu.')}
-            theme="filled_black"
-            shape="pill"
-            size="large"
-            text="signup_with"
-            locale="tr"
-          />
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Zaten hesabın var mı? <Link to="/login" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 'bold' }}>Giriş Yap</Link>
-        </div>
       </div>
+
+      <style>{`
+        @media (max-width: 480px) {
+          .responsive-name-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0 !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

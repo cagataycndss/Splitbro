@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Calculator, Plus, SplitSquareHorizontal, Sparkles, CheckCircle2, AlertTriangle, AlertCircle, ShoppingBag, Receipt, Users, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calculator, Plus, SplitSquareHorizontal, Sparkles, CheckCircle2, AlertTriangle, AlertCircle, ShoppingBag, Receipt, Users, Trash2, X } from 'lucide-react';
 
 const ExpenseDetail = () => {
   const { expenseId } = useParams();
@@ -145,86 +145,100 @@ const ExpenseDetail = () => {
     }
   };
 
-  if (loading) return <div className="app-container" style={{textAlign:'center', marginTop: '50px'}}>Yükleniyor...</div>;
-  if (!expense) return null;
+  if (loading) return (
+    <>
+      <Header />
+      <div className="app-container">
+        <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          Yükleniyor...
+        </div>
+      </div>
+    </>
+  );
 
-  const isOwner = expense.paidById?._id === (user?.id || user?._id);
+  if (!expense) return null;
 
   return (
     <>
       <Header />
       <div className="app-container">
-        <Link to={`/groups/${expense.groupId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', textDecoration: 'none', marginBottom: '1.5rem' }}>
+        <Link to={`/groups/${expense.groupId}`} className="btn btn-outline btn-sm" style={{ marginBottom: '1.25rem' }}>
           <ArrowLeft size={16} /> Gruba Geri Dön
         </Link>
 
         {/* Header Info */}
-        <div className="glass-panel animate-fade-in" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+        <div className="glass-panel animate-fade-in flex-between-responsive" style={{ padding: '1.75rem', marginBottom: '1.5rem' }}>
           <div>
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <Receipt color="var(--primary-color)" /> {expense.title}
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+              <Receipt color="var(--primary-color)" size={28} /> {expense.title}
             </h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Ödeyen: <strong>{expense.paidById?.firstName} {expense.paidById?.lastName}</strong> • {new Date(expense.createdAt).toLocaleDateString('tr-TR')}</p>
+            <p style={{ margin: 0, fontSize: '0.9rem' }}>
+              Ödeyen: <strong>{expense.paidById?.firstName} {expense.paidById?.lastName}</strong> • {new Date(expense.createdAt).toLocaleDateString('tr-TR')}
+            </p>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Toplam Gider</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>₺{expense.totalAmount}</div>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Toplam Gider</div>
+            <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--primary-color)' }}>₺{expense.totalAmount}</div>
           </div>
         </div>
 
         {/* Actions Row */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-          <button className="btn btn-primary" onClick={() => setAddItemModal(true)}>
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-gradient" onClick={() => setAddItemModal(true)}>
             <Plus size={18} /> Yeni Ürün Ekle
           </button>
-          <button className="btn btn-outline" style={{ border: '1px solid var(--success-color)', color: 'var(--success-color)' }} onClick={handleCalculateDebts}>
+          <button className="btn btn-success" onClick={handleCalculateDebts}>
             <Calculator size={18} /> Borç Hesapla (AI)
           </button>
         </div>
 
         {/* Selected Items List */}
         <div className="glass-panel animate-fade-in">
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
-            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShoppingBag size={20}/> Satın Alınan Ürün Listesi</h2>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
+              <ShoppingBag size={22} color="var(--primary-color)"/> Ürün Kalemleri ({expense.items?.length || 0})
+            </h2>
           </div>
           
-          <div style={{ padding: '1.5rem' }}>
+          <div style={{ padding: '1.25rem' }}>
             {(!expense.items || expense.items.length === 0) ? (
-              <p style={{ color: 'var(--text-secondary)' }}>Bu gidere henüz hiç spesifik ürün girilmemiş.</p>
+              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-secondary)' }}>
+                <ShoppingBag size={36} style={{ opacity: 0.4, marginBottom: '0.5rem' }} />
+                <p>Bu gidere henüz ürün kalemi eklenmedi.</p>
+              </div>
             ) : (
-              <div style={{ display: 'grid', gap: '1rem' }}>
+              <div style={{ display: 'grid', gap: '0.85rem' }}>
                  {expense.items.map((item, idx) => (
-                   <div key={idx} className="glass-card" style={{ padding: '1.25rem', position: 'relative' }}>
-                     <button onClick={() => handleDeleteItem(item._id)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border:'none', color: 'var(--danger-color)', cursor: 'pointer', padding: '4px' }} title="Ürünü Sil">
-                       <Trash2 size={16} />
+                   <div key={idx} className="glass-card" style={{ padding: '1.15rem', position: 'relative' }}>
+                     <button 
+                       onClick={() => handleDeleteItem(item._id)} 
+                       className="btn btn-danger btn-sm"
+                       style={{ position: 'absolute', top: '10px', right: '10px', padding: '0.35rem', minHeight: 'auto' }} 
+                       title="Sil"
+                     >
+                       <Trash2 size={15} />
                      </button>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                       <div>
-                         <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.name}</div>
-                         <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                            Kategori: {item.category}
+
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', paddingRight: '2rem' }}>
+                       <div style={{ flex: '1 1 200px' }}>
+                         <div style={{ fontWeight: '700', fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.name}</div>
+                         <div style={{ marginBottom: '0.5rem' }}>
+                           <span className="badge badge-primary">
+                              Kategori: {item.category}
+                           </span>
                          </div>
                        
-                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                           <Users size={14} /> Şunlar arasında bölüşülecek: 
-                            {item.assignedUserIds?.length > 0 
-                              ? item.assignedUserIds.map(u => {
-                                  // u might be populated user object OR an ID (guest ID or unpopulated user)
-                                  if (!u) return 'Bilinmiyor';
-                                  if (typeof u === 'object' && (u.firstName || u.guestName)) {
-                                      return u.guestName || `${u.firstName} ${u.lastName}`;
-                                  }
-                                  // Fallback: search in members list
-                                  const m = members.find(mem => (mem.user?._id || mem.user || mem._id) === (u._id || u));
-                                  return m ? (m.guestName || (m.user ? `${m.user.firstName} ${m.user.lastName}` : "Bilinmiyor")) : "Bilinmiyor";
-                                }).join(', ') 
-                              : 'Henüz kimse atanmadı'}
+                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                           <Users size={14} color="var(--secondary-color)" /> Bölüşüm: 
+                           {item.assignedUserIds?.length > 0 
+                             ? item.assignedUserIds.map(u => typeof u === 'string' ? '(?id)' : `${u.firstName} ${u.lastName}`).join(', ') 
+                             : 'Henüz kimse atanmadı'}
                          </div>
                        </div>
 
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                         <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>₺{item.price}</div>
-                         <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => openSplitModal(item)}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                         <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--primary-color)' }}>₺{item.price}</div>
+                         <button className="btn btn-outline btn-sm" onClick={() => openSplitModal(item)}>
                            <SplitSquareHorizontal size={16} /> Bölüştür
                          </button>
                        </div>
@@ -240,9 +254,15 @@ const ExpenseDetail = () => {
 
       {/* ADD ITEM MODAL */}
       {addItemModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="glass-panel animate-fade-in" style={{ width: '450px', padding: '2rem' }}>
-             <h2 style={{ marginBottom: '1.5rem' }}>Yeni Ürün Ekle</h2>
+        <div className="modal-overlay" onClick={() => setAddItemModal(false)}>
+          <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+               <h2>Yeni Ürün Ekle</h2>
+               <button onClick={() => setAddItemModal(false)} className="btn btn-outline btn-sm" style={{ padding: '0.35rem', minHeight: 'auto' }}>
+                 <X size={18} />
+               </button>
+             </div>
+             
              <form onSubmit={handleAddItem}>
                <div className="input-group">
                  <label className="input-label">Ürün Adı</label>
@@ -256,20 +276,20 @@ const ExpenseDetail = () => {
 
                {/* AI TOOLS */}
                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                 <button type="button" className="btn btn-outline" style={{ border: '1px solid var(--secondary-color)', color: 'var(--secondary-color)', fontSize: '0.8rem', padding: '0.3rem 0.6rem' }} onClick={handleCategorizeWithAI} disabled={aiCatLoading}>
-                    <Sparkles size={14} /> {aiCatLoading ? 'AI Düşünüyor...' : 'Otomatik Kategorize Et (AI)'}
+                 <button type="button" className="btn btn-outline btn-sm" style={{ borderColor: 'var(--secondary-color)', color: 'var(--secondary-color)' }} onClick={handleCategorizeWithAI} disabled={aiCatLoading}>
+                    <Sparkles size={14} /> {aiCatLoading ? 'AI Sınıflandırıyor...' : 'AI Kategorize Et'}
                  </button>
-                 <button type="button" className="btn btn-outline" style={{ border: '1px solid var(--primary-color)', color: 'var(--primary-color)', fontSize: '0.8rem', padding: '0.3rem 0.6rem' }} onClick={handleVerifyPriceWithAI} disabled={aiPriceLoading}>
-                    <AlertTriangle size={14} /> {aiPriceLoading ? 'AI İnceliyor...' : 'Fiyat Anomali Kontrolü (AI)'}
+                 <button type="button" className="btn btn-outline btn-sm" style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }} onClick={handleVerifyPriceWithAI} disabled={aiPriceLoading}>
+                    <AlertTriangle size={14} /> {aiPriceLoading ? 'AI İnceliyor...' : 'AI Fiyat Kontrolü'}
                  </button>
                </div>
 
                {aiPriceResult && (
-                 <div style={{ background: aiPriceResult.isAnomalous ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.1)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                 <div className={`alert-box ${aiPriceResult.isAnomalous ? 'alert-danger' : 'alert-success'}`}>
                    {aiPriceResult.isAnomalous ? (
-                     <div style={{ color: 'var(--danger-color)', display: 'flex', gap: '0.5rem' }}><AlertCircle size={16}/> <strong>Anomali Tespit Edildi!</strong> {aiPriceResult.reason}</div>
+                     <><AlertCircle size={18}/> <div><strong>Anomali Tespit Edildi:</strong> {aiPriceResult.reason}</div></>
                    ) : (
-                     <div style={{ color: 'var(--success-color)', display: 'flex', gap: '0.5rem' }}><CheckCircle2 size={16}/> <strong>Mantıklı Fiyat!</strong> {aiPriceResult.reason}</div>
+                     <><CheckCircle2 size={18}/> <div><strong>Fiyat Normal:</strong> {aiPriceResult.reason}</div></>
                    )}
                  </div>
                )}
@@ -279,9 +299,9 @@ const ExpenseDetail = () => {
                  <input type="text" className="glass-input" placeholder="Örn: Gıda, Eğlence..." value={newItemCategory} onChange={e=>setNewItemCategory(e.target.value)} />
                </div>
                
-               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                  <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setAddItemModal(false)}>İptal</button>
-                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Ekle</button>
+                 <button type="submit" className="btn btn-gradient" style={{ flex: 1 }}>Ekle</button>
                </div>
              </form>
           </div>
@@ -290,30 +310,46 @@ const ExpenseDetail = () => {
 
       {/* SPLIT ITEM MODAL */}
       {splitModal && selectedItem && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="glass-panel animate-fade-in" style={{ width: '400px', padding: '2rem' }}>
-             <h2 style={{ marginBottom: '0.5rem' }}>Ürünü Bölüştür</h2>
-             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>{selectedItem.name} <strong>(₺{selectedItem.price})</strong> ürününü kimler yedi/kullandı?</p>
+        <div className="modal-overlay" onClick={() => setSplitModal(false)}>
+          <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+               <h2>Ürünü Bölüştür</h2>
+               <button onClick={() => setSplitModal(false)} className="btn btn-outline btn-sm" style={{ padding: '0.35rem', minHeight: 'auto' }}>
+                 <X size={18} />
+               </button>
+             </div>
+             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+               <strong>{selectedItem.name}</strong> (₺{selectedItem.price}) ürününü kimler kullandı?
+             </p>
              
              <form onSubmit={handleSplitSubmit}>
-               <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
+               <div style={{ maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.5rem' }}>
                  {members.map((m, idx) => {
-                   const uId = m.user?._id || m._id;
-                   const isSelected = selectedUserIds.includes(uId);
+                   const u = m.user;
+                   const isSelected = selectedUserIds.includes(u._id);
                    return (
-                     <div key={idx} onClick={() => toggleUserInSplit(uId)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)', border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                     <div 
+                       key={idx} 
+                       onClick={() => toggleUserInSplit(u._id)} 
+                       style={{ 
+                         display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.85rem', 
+                         background: isSelected ? 'var(--primary-light)' : 'rgba(255,255,255,0.03)', 
+                         border: isSelected ? '1px solid var(--primary-color)' : '1px solid var(--surface-border)', 
+                         borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 0.2s' 
+                       }}
+                     >
                        <input type="checkbox" checked={isSelected} readOnly style={{ width: '18px', height: '18px' }} />
-                        <div style={{ flex: 1, fontWeight: isSelected ? 'bold' : 'normal' }}>
-                          {m.guestName || (m.user ? `${m.user.firstName} ${m.user.lastName}` : "Bilinmiyor")}
-                        </div>
+                       <div style={{ flex: 1, fontWeight: isSelected ? '700' : '500', fontSize: '0.9rem' }}>
+                         {u.firstName} {u.lastName}
+                       </div>
                      </div>
                    );
                  })}
                </div>
                
-               <div style={{ display: 'flex', gap: '1rem' }}>
+               <div style={{ display: 'flex', gap: '0.75rem' }}>
                  <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setSplitModal(false)}>İptal</button>
-                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Kaydet</button>
+                 <button type="submit" className="btn btn-gradient" style={{ flex: 1 }}>Kaydet</button>
                </div>
              </form>
           </div>
@@ -322,30 +358,39 @@ const ExpenseDetail = () => {
 
       {/* CALCULATE DEBTS MODAL */}
       {calcModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 150 }}>
-          <div className="glass-panel animate-fade-in" style={{ width: '500px', padding: '2rem' }}>
-             <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success-color)' }}><Calculator size={24} /> Borç Dağılımı Sonucu</h2>
+        <div className="modal-overlay" onClick={() => setCalcModal(false)}>
+          <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+               <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success-color)', margin: 0, fontSize: '1.25rem' }}>
+                 <Calculator size={22} /> Borç Dağılım Sonucu
+               </h2>
+               <button onClick={() => setCalcModal(false)} className="btn btn-outline btn-sm" style={{ padding: '0.35rem', minHeight: 'auto' }}>
+                 <X size={18} />
+               </button>
+             </div>
              
              {debts.length === 0 ? (
-               <p style={{ color: 'var(--text-secondary)' }}>Kimsenin kimseye borcu yok veya hiçbir ürün ataması yapılmamış.</p>
+               <div className="alert-box alert-info">
+                 Kimsenin kimseye borcu yok veya hiçbir ürün ataması yapılmamış.
+               </div>
              ) : (
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxHeight: '300px', overflowY: 'auto' }}>
                  {debts.map((debt, idx) => {
-                   const debtorObj = members.find(m => (m.user?._id || m._id) === debt.debtorId);
-                   const creditorObj = members.find(m => (m.user?._id || m._id) === debt.creditorId);
-                   const debtorName = debtorObj ? (debtorObj.guestName || `${debtorObj.user?.firstName} ${debtorObj.user?.lastName}`) : "Bilinmeyen";
-                   const creditorName = creditorObj ? (creditorObj.guestName || `${creditorObj.user?.firstName} ${creditorObj.user?.lastName}`) : "Ödeyen Kişi";
+                   const debtorObj = members.find(m => m.user._id === debt.debtorId)?.user;
+                   const creditorObj = members.find(m => m.user._id === debt.creditorId)?.user;
+                   const debtorName = debtorObj ? `${debtorObj.firstName} ${debtorObj.lastName}` : "Bilinmeyen";
+                   const creditorName = creditorObj ? `${creditorObj.firstName} ${creditorObj.lastName}` : "Ödeyen Kişi";
                    return (
-                     <div key={idx} style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', borderLeft: '4px solid var(--success-color)' }}>
-                       <div style={{ fontSize: '1.1rem' }}>
-                         <strong>{debtorName}</strong>'in <strong style={{ color: 'var(--secondary-color)' }}>{creditorName}</strong>'e ödemesi gerek: <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>₺{debt.amount.toFixed(2)}</span>
+                     <div key={idx} className="glass-card" style={{ padding: '1rem', borderLeft: '4px solid var(--success-color)' }}>
+                       <div style={{ fontSize: '0.95rem' }}>
+                         <strong>{debtorName}</strong> &rarr; <strong style={{ color: 'var(--secondary-color)' }}>{creditorName}</strong>: <span style={{ color: 'var(--primary-color)', fontWeight: '800' }}>₺{debt.amount.toFixed(2)}</span>
                        </div>
                      </div>
                  )})}
                </div>
              )}
              
-             <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setCalcModal(false)}>Teşekkürler, Kapat</button>
+             <button className="btn btn-gradient" style={{ width: '100%' }} onClick={() => setCalcModal(false)}>Kapat</button>
           </div>
         </div>
       )}

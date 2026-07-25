@@ -1,28 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogIn } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
+import { LogIn, Sparkles, Mail, Lock, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, googleLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setIsLoading(true);
-    setError('');
-    const res = await googleLogin(credentialResponse.credential);
-    if (res.success) {
-      navigate('/dashboard');
-    } else {
-      setError(res.message);
-      setIsLoading(false);
-    }
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -39,21 +26,64 @@ const Login = () => {
   };
 
   return (
-    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
+    <div className="app-container" style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justify: 'center',
+      minHeight: 'calc(100vh - 4rem)',
+      padding: '1rem'
+    }}>
+      <div className="glass-panel animate-fade-in" style={{ 
+        width: '100%', 
+        maxWidth: '420px', 
+        padding: '2.5rem 2rem',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        
+        {/* Glow Accent Circle */}
+        <div style={{
+          position: 'absolute',
+          top: '-50px',
+          right: '-50px',
+          width: '120px',
+          height: '120px',
+          background: 'var(--accent-color)',
+          filter: 'blur(60px)',
+          opacity: 0.4,
+          borderRadius: '50%',
+          pointerEvents: 'none'
+        }} />
+
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-            <LogIn size={32} color="var(--primary-color)" />
-            SplitBro
+          <div style={{
+            width: '54px', height: '54px', borderRadius: '16px',
+            background: 'var(--accent-gradient)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '1rem',
+            boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)'
+          }}>
+            <Sparkles size={28} color="#ffffff" />
+          </div>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.35rem' }}>
+            Split<span className="gradient-text">Bro</span>'ya Giriş Yap
           </h1>
-          <p>Harcamaları kolayca bölüştür, takip et.</p>
+          <p style={{ fontSize: '0.9rem' }}>Harcamalarınızı kolayca bölüştürün ve takip edin.</p>
         </div>
 
-        {error && <div style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</div>}
+        {error && (
+          <div className="alert-box alert-danger">
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="input-group">
-            <label className="input-label">E-posta Adresi</label>
+            <label className="input-label">
+              <Mail size={15} color="var(--primary-color)" /> E-posta Adresi
+            </label>
             <input 
               type="email" 
               className="glass-input" 
@@ -63,8 +93,11 @@ const Login = () => {
               required
             />
           </div>
+
           <div className="input-group">
-            <label className="input-label">Şifre</label>
+            <label className="input-label">
+              <Lock size={15} color="var(--primary-color)" /> Şifre
+            </label>
             <input 
               type="password" 
               className="glass-input" 
@@ -75,32 +108,26 @@ const Login = () => {
             />
           </div>
           
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={isLoading}>
+          <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: '1rem' }} disabled={isLoading}>
+            <LogIn size={20} />
             {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--surface-border)' }} />
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>veya</span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--surface-border)' }} />
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '2rem', 
+          paddingTop: '1.25rem',
+          borderTop: '1px solid var(--surface-border)',
+          fontSize: '0.9rem', 
+          color: 'var(--text-secondary)' 
+        }}>
+          Hesabınız yok mu?{' '}
+          <Link to="/register" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '700' }}>
+            Hemen Kayıt Ol
+          </Link>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setError('Google ile giriş yapılırken bir hata oluştu.')}
-            theme="filled_black"
-            shape="pill"
-            size="large"
-            text="signin_with"
-            locale="tr"
-          />
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Hesabın yok mu? <Link to="/register" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 'bold' }}>Kayıt Ol</Link>
-        </div>
       </div>
     </div>
   );
