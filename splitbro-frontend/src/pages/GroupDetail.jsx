@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
-import { Camera, Users, Trash2, Edit3, UserPlus, LogOut, Receipt, Plus, SplitSquareHorizontal, Calculator, Wallet, ArrowRight, X, Sparkles } from 'lucide-react';
+import { Camera, Users, Trash2, Edit3, UserPlus, LogOut, Receipt, Plus, SplitSquareHorizontal, Calculator, Wallet, ArrowRight, X, Sparkles, UserCheck } from 'lucide-react';
 
 const GroupDetail = () => {
   const { groupId } = useParams();
@@ -33,7 +33,10 @@ const GroupDetail = () => {
   const [scanning, setScanning] = useState(false);
   const receiptInputRef = useRef(null);
   
+  const [memberTab, setMemberTab] = useState('registered'); // 'registered' veya 'guest'
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newGuestName, setNewGuestName] = useState('');
+
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
 
@@ -123,6 +126,18 @@ const GroupDetail = () => {
        fetchData();
     } catch (error) {
        alert("Üye eklenemedi: " + (error.response?.data?.message || 'Geçici hata'));
+    }
+  };
+
+  const addGuestMember = async (e) => {
+    e.preventDefault();
+    try {
+       await api.post(`/groups/${groupId}/members/guest`, { guestName: newGuestName });
+       setMemberModal(false);
+       setNewGuestName('');
+       fetchData();
+    } catch (error) {
+       alert("Misafir eklenemedi: " + (error.response?.data?.message || 'Geçici hata'));
     }
   };
 
@@ -365,8 +380,10 @@ const GroupDetail = () => {
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             {member.role === 'owner' ? (
                               <span className="badge badge-primary">Kurucu</span>
+                            ) : member.user?.lastName === '(Misafir)' ? (
+                              <span className="badge badge-warning">Misafir</span>
                             ) : (
-                              <span className="badge badge-warning">Üye</span>
+                              <span className="badge badge-success">Üye</span>
                             )}
                           </div>
                         </div>
@@ -542,27 +559,65 @@ const GroupDetail = () => {
         </div>
       )}
 
-      {/* Add Member Modal */}
+      {/* Add Member / Guest Modal */}
       {memberModal && (
         <div className="modal-overlay" onClick={() => setMemberModal(false)}>
           <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-               <h2>Gruba Üye Ekle</h2>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+               <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Gruba Üye Ekle</h2>
                <button onClick={() => setMemberModal(false)} className="btn btn-outline btn-sm" style={{ padding: '0.35rem', minHeight: 'auto' }}>
                  <X size={18} />
                </button>
              </div>
-             <form onSubmit={addMember}>
-               <div className="input-group">
-                 <label className="input-label">E-posta Adresi</label>
-                 <input type="email" className="glass-input" placeholder="Arkadaşınızın e-postası" value={newMemberEmail} onChange={e=>setNewMemberEmail(e.target.value)} required />
-               </div>
-               
-               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setMemberModal(false)}>İptal</button>
-                 <button type="submit" className="btn btn-gradient" style={{ flex: 1 }}>Davet Et</button>
-               </div>
-             </form>
+
+             {/* Tab Selector */}
+             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', background: 'rgba(0,0,0,0.3)', padding: '0.25rem', borderRadius: 'var(--radius-md)' }}>
+               <button 
+                 type="button"
+                 className={`btn btn-sm ${memberTab === 'registered' ? 'btn-primary' : 'btn-outline'}`}
+                 style={{ flex: 1, border: 'none' }}
+                 onClick={() => setMemberTab('registered')}
+               >
+                 <UserPlus size={15} /> Kayıtlı Üye
+               </button>
+               <button 
+                 type="button"
+                 className={`btn btn-sm ${memberTab === 'guest' ? 'btn-primary' : 'btn-outline'}`}
+                 style={{ flex: 1, border: 'none' }}
+                 onClick={() => setMemberTab('guest')}
+               >
+                 <UserCheck size={15} /> Misafir Üye
+               </button>
+             </div>
+
+             {memberTab === 'registered' ? (
+               <form onSubmit={addMember}>
+                 <div className="input-group">
+                   <label className="input-label">E-posta Adresi</label>
+                   <input type="email" className="glass-input" placeholder="Arkadaşınızın SplitBro e-postası" value={newMemberEmail} onChange={e=>setNewMemberEmail(e.target.value)} required />
+                 </div>
+                 
+                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                   <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setMemberModal(false)}>İptal</button>
+                   <button type="submit" className="btn btn-gradient" style={{ flex: 1 }}>Davet Et</button>
+                 </div>
+               </form>
+             ) : (
+               <form onSubmit={addGuestMember}>
+                 <div className="input-group">
+                   <label className="input-label">Misafir Adı</label>
+                   <input type="text" className="glass-input" placeholder="Örn: Mehmet Ali, Ahmet" value={newGuestName} onChange={e=>setNewGuestName(e.target.value)} required />
+                 </div>
+                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                   Sisteme kayıtlı olmayan kişiler için hızlıca hesapsız bir misafir profili oluşturabilirsiniz.
+                 </p>
+                 
+                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                   <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setMemberModal(false)}>İptal</button>
+                   <button type="submit" className="btn btn-gradient" style={{ flex: 1 }}>Misafir Ekle</button>
+                 </div>
+               </form>
+             )}
           </div>
         </div>
       )}
