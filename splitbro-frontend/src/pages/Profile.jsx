@@ -151,165 +151,183 @@ const Profile = () => {
   return (
     <>
       <Header />
-      <div className="app-container" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '2rem' }}>
+      <div className="app-container">
+        
+        <h1 style={{ marginBottom: '1.5rem', fontSize: '1.8rem' }}>
+          Profil <span className="gradient-text">Ayarları</span>
+        </h1>
 
-        {/* Sol Kolon: Profil ve Resim */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className="grid-responsive-2">
 
-          {/* Profil Resmi Kartı */}
-          <div className="glass-panel animate-fade-in" style={{ padding: '2rem' }}>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <div
-                  style={{
-                    width: '120px', height: '120px', borderRadius: '50%',
-                    background: 'var(--primary-color)', margin: '0 auto',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    overflow: 'hidden', border: '3px solid var(--surface-border)',
-                    cursor: 'pointer', transition: 'all 0.3s'
-                  }}
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Resim yüklemek için tıklayın"
-                >
-                  {avatarSrc ? (
-                    <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '3rem', fontWeight: 'bold' }}>{firstName?.[0] || '?'}</span>
+          {/* Sol Kolon: Profil ve Resim */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+            {/* Profil Resmi Kartı */}
+            <div className="glass-panel animate-fade-in" style={{ padding: '1.75rem' }}>
+              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <div
+                    style={{
+                      width: '110px', height: '110px', borderRadius: '50%',
+                      background: 'var(--accent-gradient)', margin: '0 auto',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden', border: '3px solid var(--surface-border-glow)',
+                      cursor: 'pointer', transition: 'all 0.3s',
+                      boxShadow: 'var(--shadow-glow)'
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Resim yüklemek için tıklayın"
+                  >
+                    {avatarSrc ? (
+                      <img src={avatarSrc} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '2.75rem', fontWeight: '800', color: '#fff' }}>{firstName?.[0] || '?'}</span>
+                    )}
+                  </div>
+
+                  {/* Kamera overlay */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      position: 'absolute', bottom: '0', right: '0',
+                      width: '34px', height: '34px', borderRadius: '50%',
+                      background: 'var(--primary-color)', border: '2px solid var(--bg-gradient-start)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', transition: 'transform 0.2s', color: '#fff'
+                    }}
+                    title="Fotoğraf Yükle"
+                  >
+                    <Camera size={16} />
+                  </div>
+                </div>
+
+                {/* Gizli file input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                />
+
+                <h2 style={{ marginTop: '1rem', marginBottom: '0.15rem', fontSize: '1.4rem' }}>{firstName} {lastName}</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.85rem' }}>SplitBro Üyesi</p>
+
+                {/* Resim Aksiyonları */}
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {avatarFile && (
+                    <button
+                      className="btn btn-gradient btn-sm"
+                      onClick={handleUploadAvatar}
+                      disabled={loading}
+                    >
+                      <Upload size={14} /> {loading ? 'Yükleniyor...' : 'Resmi Kaydet'}
+                    </button>
+                  )}
+                  {(user?.avatar || avatarFile) && (
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => {
+                        if (avatarFile) { setAvatarFile(null); setAvatarPreview(null); }
+                        else { handleRemoveAvatar(); }
+                      }}
+                    >
+                      <Trash2 size={14} /> {avatarFile ? 'İptal' : 'Resmi Sil'}
+                    </button>
+                  )}
+                  {!avatarFile && (
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <RefreshCw size={14} /> {user?.avatar ? 'Değiştir' : 'Resim Yükle'}
+                    </button>
                   )}
                 </div>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.65rem' }}>
+                  JPG, PNG veya WebP • Maks 5MB
+                </p>
+              </div>
 
-                {/* Kamera overlay */}
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    position: 'absolute', bottom: '0', right: '0',
-                    width: '36px', height: '36px', borderRadius: '50%',
-                    background: 'var(--primary-color)', border: '2px solid var(--bg-color)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', transition: 'transform 0.2s'
-                  }}
-                >
-                  <Camera size={16} />
+              {/* Kişisel Bilgiler */}
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem', fontSize: '1.15rem' }}>
+                <User size={18} color="var(--primary-color)" /> Kişisel Bilgiler
+              </h3>
+
+              <form onSubmit={handleUpdateProfile}>
+                <div className="responsive-name-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="input-group">
+                    <label className="input-label">Ad</label>
+                    <input type="text" className="glass-input" value={firstName} onChange={e => setFirstName(e.target.value)} required />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Soyad</label>
+                    <input type="text" className="glass-input" value={lastName} onChange={e => setLastName(e.target.value)} required />
+                  </div>
                 </div>
-              </div>
 
-              {/* Gizli file input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                accept="image/*"
-                style={{ display: 'none' }}
-              />
-
-              <h2 style={{ marginTop: '1rem', marginBottom: '0.2rem' }}>{firstName} {lastName}</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>SplitBro Üyesi</p>
-
-              {/* Resim Aksiyonları */}
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {avatarFile && (
-                  <button
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                    onClick={handleUploadAvatar}
-                    disabled={loading}
-                  >
-                    <Upload size={14} /> {loading ? 'Yükleniyor...' : 'Resmi Kaydet'}
-                  </button>
-                )}
-                {(user?.avatar || avatarFile) && (
-                  <button
-                    className="btn btn-outline"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: 'var(--danger-color)', borderColor: 'var(--danger-color)' }}
-                    onClick={() => {
-                      if (avatarFile) { setAvatarFile(null); setAvatarPreview(null); }
-                      else { handleRemoveAvatar(); }
-                    }}
-                  >
-                    <Trash2 size={14} /> {avatarFile ? 'İptal' : 'Resmi Sil'}
-                  </button>
-                )}
-                {!avatarFile && (
-                  <button
-                    className="btn btn-outline"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <RefreshCw size={14} /> {user?.avatar ? 'Değiştir' : 'Resim Yükle'}
-                  </button>
-                )}
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.75rem' }}>
-                JPG, PNG veya WebP • Maks 5MB
-              </p>
+                <button className="btn btn-gradient" style={{ width: '100%' }} disabled={loading}>
+                  <CheckSquare size={16} /> Profili Kaydet
+                </button>
+              </form>
             </div>
 
-            {/* Kişisel Bilgiler */}
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
-              <User size={20} color="var(--primary-color)" /> Kişisel Bilgiler
-            </h3>
-
-            <form onSubmit={handleUpdateProfile}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div className="input-group" style={{ flex: 1 }}>
-                  <label className="input-label">Ad</label>
-                  <input type="text" className="glass-input" value={firstName} onChange={e => setFirstName(e.target.value)} required />
-                </div>
-                <div className="input-group" style={{ flex: 1 }}>
-                  <label className="input-label">Soyad</label>
-                  <input type="text" className="glass-input" value={lastName} onChange={e => setLastName(e.target.value)} required />
-                </div>
-              </div>
-
-              <button className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                <CheckSquare size={16} /> Profili Kaydet
-              </button>
-            </form>
           </div>
 
-        </div>
+          {/* Sağ Kolon: Şifre, Tehlikeli Bölge */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-        {/* Sağ Kolon: Şifre, Tehlikeli Bölge */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="glass-panel animate-fade-in" style={{ padding: '1.75rem', animationDelay: '0.1s' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem', fontSize: '1.15rem' }}>
+                <KeyRound size={18} color="var(--secondary-color)" /> Şifre Değiştir
+              </h3>
 
-          <div className="glass-panel animate-fade-in" style={{ padding: '2rem', animationDelay: '0.1s' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
-              <KeyRound size={20} color="var(--secondary-color)" /> Şifre Değiştir
-            </h3>
+              <form onSubmit={handleChangePassword}>
+                <div className="input-group">
+                  <label className="input-label">Mevcut Şifreniz</label>
+                  <input type="password" className="glass-input" required value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Yeni Şifreniz</label>
+                  <input type="password" className="glass-input" required value={newPassword} onChange={e => setNewPassword(e.target.value)} minLength={6} />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Yeni Şifre (Tekrar)</label>
+                  <input type="password" className="glass-input" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                </div>
 
-            <form onSubmit={handleChangePassword}>
-              <div className="input-group">
-                <label className="input-label">Mevcut Şifreniz</label>
-                <input type="password" className="glass-input" required value={oldPassword} onChange={e => setOldPassword(e.target.value)} />
-              </div>
-              <div className="input-group">
-                <label className="input-label">Yeni Şifreniz</label>
-                <input type="password" className="glass-input" required value={newPassword} onChange={e => setNewPassword(e.target.value)} minLength="6" />
-              </div>
-              <div className="input-group">
-                <label className="input-label">Yeni Şifre (Tekrar)</label>
-                <input type="password" className="glass-input" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-              </div>
+                <button className="btn btn-success" style={{ width: '100%' }} disabled={loading}>
+                  <Lock size={16} /> Şifreyi Güncelle
+                </button>
+              </form>
+            </div>
 
-              <button className="btn btn-primary" style={{ border: '1px solid var(--secondary-color)', background: 'var(--surface-color)', color: 'var(--secondary-color)', width: '100%' }} disabled={loading}>
-                <Lock size={16} /> Şifreyi Güncelle
+            <div className="glass-panel animate-fade-in" style={{ padding: '1.75rem', border: '1px solid rgba(244, 63, 94, 0.35)', animationDelay: '0.2s' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--danger-color)', fontSize: '1.15rem' }}>
+                <AlertTriangle size={18} /> Tehlikeli Bölge
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+                Hesabınızı sildiğinizde, grubunuz haricindeki verileriniz ve hesabınız sistemimizden kalıcı olarak kaldırılır.
+              </p>
+              <button className="btn btn-danger" style={{ width: '100%' }} onClick={handleDeleteAccount}>
+                <UserMinus size={18} /> Hesabımı Kalıcı Olarak Sil
               </button>
-            </form>
-          </div>
+            </div>
 
-          <div className="glass-panel animate-fade-in" style={{ padding: '2rem', border: '1px solid rgba(239, 68, 68, 0.3)', animationDelay: '0.2s' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--danger-color)' }}>
-              <AlertTriangle size={20} /> Tehlikeli Alan
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Hesabınızı sildiğinizde, katıldığınız tüm gruplardaki hareketleriniz ve verileriniz SplitBro sisteminden tamamen temizlenir. Bu işlem geri döndürülemez!</p>
-            <button className="btn btn-danger" style={{ width: '100%' }} onClick={handleDeleteAccount}>
-              <UserMinus size={18} /> Hesabımı Kalıcı Olarak Sil
-            </button>
           </div>
 
         </div>
 
       </div>
+
+      <style>{`
+        @media (max-width: 480px) {
+          .responsive-name-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0 !important;
+          }
+        }
+      `}</style>
     </>
   );
 };
